@@ -1,0 +1,8 @@
+{
+  "name": "loop-eng",
+  "version": "0.1.0",
+  "description": "Desenvolve um projeto inteiro em loop: contrato aprovado, agentes planejam, implementam, revisam e entregam, com consenso ancorado em testes.",
+  "author": {
+    "name": "salemarsm"
+  }
+}
