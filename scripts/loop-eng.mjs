@@ -3,7 +3,8 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
 import { git, defaultBranch, branchExiste, loopWorktrees, resolveLoop } from './lib/git.mjs';
-import { parseEstado, STATUS } from './lib/estado.mjs';
+import { parseEstado, serializeEstado, STATUS } from './lib/estado.mjs';
+import { runGh } from './lib/gh.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
 
@@ -152,10 +153,94 @@ function status(args) {
   ].join('\n');
 }
 
+const gh = (args) => JSON.parse(runGh([...args, '--format', 'json']));
+
+function corpoTarefa(t) {
+  return [`conformidade: ${t.conformidade}`, `qualidade: ${t.qualidade}`, `especialista: ${t.especialista}`, `commit: ${t.commit}`].join('\n');
+}
+
+const tituloTarefa = (t) => `${t.id} [${t.nivel}] r${t.rodada} — ${t.titulo}`;
+
+// Cria o Project e o campo Etapa; devolve o conteúdo inicial de .quadro.json.
+function criaProject(slug) {
+  const criado = gh(['project', 'create', '--owner', '@me', '--title', `loop-eng: ${slug}`]);
+  const { number, url } = criado;
+  const { id: projectId } = gh(['project', 'view', String(number), '--owner', '@me']);
+  gh(['project', 'field-create', String(number), '--owner', '@me', '--name', 'Etapa',
+    '--data-type', 'SINGLE_SELECT', '--single-select-options', STATUS.join(',')]);
+  const etapa = gh(['project', 'field-list', String(number), '--owner', '@me']).fields.find((f) => f.name === 'Etapa');
+  if (!etapa) throw new Error('campo Etapa não encontrado após a criação');
+  const options = Object.fromEntries(etapa.options.map((o) => [o.name, o.id]));
+  console.error('quadro: no GitHub, agrupe a visão do Project por "Etapa" (Board > Column field > Etapa) — o gh não cria views.');
+  return { quadro: { number, projectId, fieldId: etapa.id, options, items: {} }, url };
+}
+
+function sincroniza(tarefas, quadro, salva) {
+  const n = String(quadro.number);
+  const novas = new Set();
+  for (const t of tarefas) {
+    if (quadro.items[t.id]) continue;
+    const item = gh(['project', 'item-create', n, '--owner', '@me', '--title', tituloTarefa(t), '--body', corpoTarefa(t)]);
+    quadro.items[t.id] = { itemId: item.id, draftId: '' };
+    novas.add(t.id);
+    salva();
+  }
+  if (tarefas.some((t) => !quadro.items[t.id].draftId)) {
+    const porItem = new Map(gh(['project', 'item-list', n, '--owner', '@me']).items.map((i) => [i.id, i.content?.id]));
+    for (const t of tarefas) quadro.items[t.id].draftId = porItem.get(quadro.items[t.id].itemId) ?? '';
+    salva();
+  }
+  for (const t of tarefas) {
+    const { itemId, draftId } = quadro.items[t.id];
+    if (!novas.has(t.id)) {
+      if (!draftId) throw new Error(`rascunho de ${t.id} não encontrado no Project`);
+      gh(['project', 'item-edit', '--id', draftId, '--title', tituloTarefa(t), '--body', corpoTarefa(t)]);
+    }
+    gh(['project', 'item-edit', '--id', itemId, '--project-id', quadro.projectId, '--field-id', quadro.fieldId,
+      '--single-select-option-id', quadro.options[t.status]]);
+  }
+}
+
+function quadroSync(args) {
+  const loop = resolveLoop(process.cwd(), args[0]);
+  const rel = path.join('docs', 'loops', loop.slug);
+  const arquivoEstado = path.join(loop.path, rel, 'estado.md');
+  const arquivoQuadro = path.join(loop.path, rel, '.quadro.json');
+  const estado = parseEstado(fs.readFileSync(arquivoEstado, 'utf8'));
+  if (estado.cab.quadro === 'off') return 'quadro: off — nada a sincronizar';
+
+  const salva = (q) => fs.writeFileSync(arquivoQuadro, `${JSON.stringify(q, null, 2)}\n`);
+  let resultado;
+  try {
+    let quadro;
+    let url = estado.cab.project;
+    if (fs.existsSync(arquivoQuadro)) {
+      quadro = JSON.parse(fs.readFileSync(arquivoQuadro, 'utf8'));
+    } else {
+      ({ quadro, url } = criaProject(loop.slug));
+      salva(quadro);
+    }
+    sincroniza(estado.tarefas, quadro, () => salva(quadro));
+    estado.cab.quadro = 'github';
+    estado.cab.project = url;
+    resultado = `quadro sincronizado: ${url}`;
+  } catch (err) {
+    estado.cab.quadro = 'dessincronizado';
+    console.error(`quadro: falha no GitHub, o loop segue sem espelho — ${String(err.stderr ?? err.message).trim()}`);
+    resultado = 'quadro: dessincronizado';
+  }
+  fs.writeFileSync(arquivoEstado, serializeEstado(estado));
+  const arquivos = [path.join(rel, 'estado.md'), ...(fs.existsSync(arquivoQuadro) ? [path.join(rel, '.quadro.json')] : [])];
+  git(loop.path, ['add', ...arquivos]);
+  if (git(loop.path, ['status', '--porcelain', '--', ...arquivos])) git(loop.path, ['commit', '-m', 'chore(loop): quadro']);
+  return resultado;
+}
+
 const COMANDOS = {
   init,
   inject,
   status,
+  'quadro-sync': quadroSync,
   slug: ([texto]) => {
     if (texto === undefined) throw new Error('uso: loop-eng slug "<texto>"');
     return slugify(texto);
