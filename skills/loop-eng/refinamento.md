@@ -36,7 +36,8 @@ O contrato só vai para aprovação quando todos os itens estão fechados:
       proibidos e infra que nunca toca; arquivos críticos que só mudam com menção
       explícita no contrato (proponha a lista a partir do CLAUDE.md/AGENTS.md).
 - [ ] **Comandos de verificação** de build/teste, conferidos no projeto (rode-os uma vez
-      na árvore atual para saber se já passam; anote se já há falha antes do loop).
+      na árvore atual para saber se já passam). Com a linha de base vermelha o contrato
+      não fecha: ou a correção vira critério, ou os comandos são estreitados ao que passa.
 - [ ] **Orçamento**: `orcamento_tokens` (tokens de subagentes) e `orcamento_chamadas`
       (chamadas de subagente). Proponha os padrões (2000000 / 200) e ajuste ao tamanho.
 - [ ] **Quadro**: `off` ou `github` (espelho no GitHub Projects; exige `gh` com escopo

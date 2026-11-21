@@ -158,8 +158,9 @@ Uma **rodada** = despacho do implementador + sua verificação + (se verde) revi
   `nivel` no quadro e anota no Log. Revisores passam a `max(padrão, nível novo)`.
 - A escalada acontece **no máximo uma vez por tarefa**. Já subiu, ou já é `opus` →
   não sobe de novo.
-- Teto: **3 rodadas** no nível atual. Rodada 3 não aceita (e sem escalada a usar) →
-  tarefa `estagnada`, loop **estagnado**. Orçamento sobrando não abre rodada 4 nem
+- Teto: **3 rodadas** no nível atual. Rodada 3 não aceita → tarefa `estagnada`, loop
+  **estagnado** — salvo se essa mesma rodada disparou a escalada (sem progresso e ainda
+  não subiu). Orçamento sobrando não abre rodada 4 nem
   escalada extra.
 
 ## Fase 3 — Entrega (`fase: entrega`)
@@ -182,14 +183,18 @@ Uma **rodada** = despacho do implementador + sua verificação + (se verde) revi
 2. Leia `injecoes.md`; para cada `- [ ]` pendente, classifique e aplique:
    - **dentro-do-contrato** (preferência, prioridade, dica): aplica — reordena
      pendentes ou passa a dica no `{{feedback}}` da tarefa afetada.
-   - **muda-contrato** (a injeção diz o que muda/vence): grava `contrato.md` v(N+1) —
+   - **muda-contrato** — pedido explícito de remover, trocar ou acrescentar algo que o
+     contrato nomeia (ex.: "não precisa do filtro por data" com C3 = filtro por data).
+     A injeção é mais nova, então **vence por padrão**; isso não é conflito. Grava `contrato.md` v(N+1) —
      critério removido fica riscado e anotado (`~~C3 …~~ removido em v2: injeção <ts>`),
      nunca apagado; alterado ganha nota; `contrato: vN+1` no estado. Tarefas
-     **pendentes** afetadas saem do quadro/plano (registre no Log) e vão ao planejador
+     **pendentes** afetadas saem do quadro (no `plano.md` a linha fica, com
+     "removida em vN" no título, para o id não ser reusado; registre no Log) e vão ao planejador
      em modo corretivo, com a injeção + contrato novo em `{{feedback}}` → revisor de
      plano. Tarefas **aceitas** afetadas: tarefa corretiva nova por cima (planejador),
      nunca revert. Sem pedir aprovação ao usuário.
-   - **conflito** (contradiz o contrato sem dizer qual vence) → **bloqueado**, pergunte.
+   - **conflito** — só quando o efeito é indecidível: quebra um critério que a injeção
+     não menciona, ou contradiz outra injeção pendente → **bloqueado**, pergunte.
    - Marque a primeira linha: `- [x] <ts> — <texto> [aplicada <YYYY-MM-DDTHH:MM>:
      dentro-do-contrato|muda-contrato|conflito]`. Nunca apague entrada. Log no estado.
 3. Orçamento: `tokens_subagentes >= orcamento_tokens` ou `chamadas >= orcamento_chamadas`
@@ -219,7 +224,9 @@ Esgotado ou erro nunca vira sucesso. Só `sucesso` faz push e PR.
    `injecoes.md` — só eles; não confie em memória da conversa.
 2. `sucesso`/`no-op` → só reporte. Outro terminal → limpe `estado_terminal`.
 3. Rode um checkpoint (injeções pendentes primeiro: a resposta a um bloqueio vira
-   `muda-contrato`/`dentro-do-contrato`; a tarefa `bloqueada` volta a `executando` na
-   mesma rodada). Sem nova informação, o mesmo estado terminal volta.
-4. Continue pela `fase`. Tarefa em `executando`/`verificando`/`revisando`: rode a
-   verificação na árvore atual e siga do passo 5 da Fase 2.
+   `muda-contrato`/`dentro-do-contrato`). Sem nova informação, o mesmo estado terminal volta.
+4. Tarefa `bloqueada` desbloqueada → **redespache o implementador** (passo 2 da Fase 2,
+   mesma rodada) com a resposta/contrato novo; nunca aceite o que ficou na árvore (pode
+   conter o valor adivinhado).
+5. Continue pela `fase`. Tarefa **interrompida** (sessão caiu em `executando`/
+   `verificando`/`revisando`): rode a verificação na árvore atual e siga do passo 5 da Fase 2.
