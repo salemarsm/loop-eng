@@ -59,7 +59,13 @@ function init(args) {
   if (fs.existsSync(worktree)) throw new Error(`o loop já existe: ${worktree}`);
   const contrato = fs.readFileSync(path.resolve(contratoPath), 'utf8');
 
-  git(raiz, ['worktree', 'add', '-b', branch, worktree, `origin/${defaultBranch(raiz)}`]);
+  const base = defaultBranch(raiz);
+  try {
+    git(raiz, ['fetch', 'origin', base]);
+  } catch (err) {
+    throw new Error(`falha ao atualizar origin/${base} (git fetch): ${String(err.stderr ?? err.message).trim()}`);
+  }
+  git(raiz, ['worktree', 'add', '-b', branch, worktree, `origin/${base}`]);
   const dir = path.join(worktree, 'docs', 'loops', slug);
   fs.mkdirSync(dir, { recursive: true });
   const preenche = (t) => t.replaceAll('<slug>', slug)

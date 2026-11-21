@@ -75,3 +75,18 @@ test('nivel e veredito fora do enum falham', () => {
 test('linha com 8 colunas falha com o número da linha', () => {
   assert.throws(() => parseEstado(minimo('| T1 | a | pendente | sonnet | 0 | — | — | — |')), /estado\.md:14:.*colunas/);
 });
+
+const crlf = (t) => t.replace(/\n/g, '\r\n');
+
+test('CRLF: template convertido faz parse igual ao LF', () => {
+  const e = parseEstado(crlf(preenchido));
+  assert.deepEqual(e, parseEstado(preenchido));
+  assert.equal(serializeEstado(e), preenchido);
+});
+
+test('CRLF: status inválido ainda aponta a linha 14', () => {
+  assert.throws(
+    () => parseEstado(crlf(minimo('| T1 | a | feito | sonnet | 0 | — | — | — | — |'))),
+    /estado\.md:14:.*status/,
+  );
+});

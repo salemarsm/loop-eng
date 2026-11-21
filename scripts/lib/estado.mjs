@@ -21,7 +21,8 @@ function validaEnum(valor, permitidos, campo, linha) {
 }
 
 // `cab.slug` vem do título "# Estado — <slug>"; os demais campos, das linhas "- chave: valor".
-export function parseEstado(texto) {
+export function parseEstado(textoBruto) {
+  const texto = textoBruto.replace(/\r\n/g, '\n');
   const linhas = texto.split('\n');
   const cab = {};
   const tarefas = [];

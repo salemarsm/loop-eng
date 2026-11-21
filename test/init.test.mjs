@@ -82,3 +82,31 @@ test('resolveLoop com 0, 1 e 2 loops e slug inexistente', () => {
   assert.throws(() => resolveLoop(repo, 'zzz'), /loop não encontrado: zzz/);
   assert.equal(loopWorktrees(repo).length, 2);
 });
+
+test('init parte do estado mais novo do remoto (fetch antes do worktree)', () => {
+  const { repo, contrato } = criaRepo();
+  const remoto = git(repo, 'remote', 'get-url', 'origin');
+  const outro = path.join(path.dirname(repo), 'outro clone');
+  git(path.dirname(repo), 'clone', remoto, outro);
+  git(outro, 'config', 'user.name', 'Outro');
+  git(outro, 'config', 'user.email', 'outro@example.com');
+  writeFileSync(path.join(outro, 'novo.txt'), 'novo\n');
+  git(outro, 'add', '.');
+  git(outro, 'commit', '-m', 'segundo');
+  git(outro, 'push', 'origin', 'main');
+  const novo = git(outro, 'rev-parse', 'HEAD');
+  const r = init(repo, ['demo', contrato]);
+  assert.equal(r.status, 0, r.stderr);
+  const wt = path.join(repo, '.claude', 'worktrees', 'loop-demo');
+  git(wt, 'merge-base', '--is-ancestor', novo, 'HEAD');
+});
+
+test('init com fetch falhando dá erro explícito e não cria nada', () => {
+  const { repo, contrato } = criaRepo();
+  git(repo, 'remote', 'set-url', 'origin', path.join(path.dirname(repo), 'inexistente.git'));
+  const r = init(repo, ['demo', contrato]);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /git fetch/);
+  assert.equal(existsSync(path.join(repo, '.claude', 'worktrees', 'loop-demo')), false);
+  assert.equal(git(repo, 'branch', '--list', 'loop/demo'), '');
+});
