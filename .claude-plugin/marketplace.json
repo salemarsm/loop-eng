@@ -1,0 +1,13 @@
+{
+  "name": "loop-eng",
+  "owner": {
+    "name": "salemarsm"
+  },
+  "plugins": [
+    {
+      "name": "loop-eng",
+      "source": "./",
+      "description": "Desenvolve um projeto inteiro em loop: contrato aprovado, agentes planejam, implementam, revisam e entregam, com consenso ancorado em testes."
+    }
+  ]
+}
