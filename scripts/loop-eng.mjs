@@ -2,7 +2,8 @@
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
-import { git, defaultBranch, branchExiste } from './lib/git.mjs';
+import { git, defaultBranch, branchExiste, loopWorktrees, resolveLoop } from './lib/git.mjs';
+import { parseEstado, STATUS } from './lib/estado.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
 
@@ -80,8 +81,81 @@ function init(args) {
   return worktree;
 }
 
+function agora() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+export function pendingInjections(textoBruto) {
+  const linhas = textoBruto.replace(/\r\n/g, '\n').split('\n');
+  const pendentes = [];
+  let atual = null;
+  linhas.forEach((l, i) => {
+    const m = /^- \[( |x)\] (\S+) — (.*)$/.exec(l);
+    if (m) {
+      atual = m[1] === ' ' ? { linha: i + 1, quando: m[2], texto: m[3] } : null;
+      if (atual) pendentes.push(atual);
+    } else if (atual && l.startsWith('  ')) {
+      atual.texto += `\n${l.slice(2)}`;
+    } else {
+      atual = null;
+    }
+  });
+  return pendentes;
+}
+
+function carregaLoop(args) {
+  const raiz = process.cwd();
+  const [primeiro, ...resto] = args;
+  const conhecido = primeiro !== undefined && loopWorktrees(raiz).some((l) => l.slug === primeiro);
+  return { loop: resolveLoop(raiz, conhecido ? primeiro : undefined), resto: conhecido ? resto : args };
+}
+
+function inject(args) {
+  const { loop, resto } = carregaLoop(args);
+  const texto = resto.join(' ');
+  if (!texto.trim()) throw new Error('uso: loop-eng inject [slug] <texto...>');
+  const rel = path.join('docs', 'loops', loop.slug);
+  const arquivo = path.join(loop.path, rel, 'injecoes.md');
+  const terminal = parseEstado(fs.readFileSync(path.join(loop.path, rel, 'estado.md'), 'utf8')).cab.estado_terminal;
+  const atual = fs.readFileSync(arquivo, 'utf8');
+  const [primeira, ...demais] = texto.replace(/\r\n/g, '\n').split('\n');
+  const entrada = [`- [ ] ${agora()} — ${primeira}`, ...demais.map((l) => `  ${l}`)].join('\n');
+  fs.writeFileSync(arquivo, `${atual}${atual.endsWith('\n') || atual === '' ? '' : '\n'}${entrada}\n`);
+  git(loop.path, ['add', path.join(rel, 'injecoes.md')]);
+  git(loop.path, ['commit', '-m', 'chore(loop): injeção']);
+  const quando = !terminal ? 'será lida no próximo checkpoint'
+    : terminal === 'bloqueado' ? 'responde ao bloqueio — retome o loop'
+      : 'vale no próximo retomar';
+  return `injeção gravada em ${arquivo}; ${quando}`;
+}
+
+function status(args) {
+  const loop = resolveLoop(process.cwd(), args[0]);
+  const dir = path.join(loop.path, 'docs', 'loops', loop.slug);
+  const { cab, tarefas } = parseEstado(fs.readFileSync(path.join(dir, 'estado.md'), 'utf8'));
+  const pendentes = pendingInjections(fs.readFileSync(path.join(dir, 'injecoes.md'), 'utf8'));
+  const aceitas = tarefas.filter((t) => t.status === 'aceita').length;
+  const tokens = Number(cab.tokens_subagentes ?? 0);
+  const custo = aceitas === 0 ? '—' : String(Math.round(tokens / aceitas));
+  return [
+    `loop: ${loop.slug}`,
+    `fase: ${cab.fase}`,
+    `estado_terminal: ${cab.estado_terminal || '—'}`,
+    'quadro:',
+    ...STATUS.map((c) => `  ${c}: ${tarefas.filter((t) => t.status === c).length}`),
+    `injeções pendentes: ${pendentes.length}`,
+    `tokens_subagentes: ${cab.tokens_subagentes}`,
+    `chamadas: ${cab.chamadas}`,
+    `custo por mudança aceita: ${custo}`,
+  ].join('\n');
+}
+
 const COMANDOS = {
   init,
+  inject,
+  status,
   slug: ([texto]) => {
     if (texto === undefined) throw new Error('uso: loop-eng slug "<texto>"');
     return slugify(texto);
