@@ -134,8 +134,8 @@ Orçamento = **tokens de subagentes** (o resultado da ferramenta Agent traz `sub
 
 ### 4.7 Fronteiras fixas (não negociáveis no contrato)
 - Branch e worktree próprias (`loop/<slug>` em `.claude/worktrees/loop-<slug>`), criadas do `origin/master` **logo após o contrato ser aprovado**; primeiro commit = `contrato.md`. Fase 0 escreve o rascunho no scratchpad. Orquestrador passa caminho absoluto da worktree a todo subagente; `retomar` acha o loop por `git worktree list` / branch `loop/<slug>`.
-- Nunca: push em `master`, merge, deploy, release, mexer na VPS, em `C:\Program Files\DNSSecurity` ou em arquivo fora da worktree.
-- Arquivos críticos do CLAUDE.md do projeto (§10) só se o contrato listar explicitamente.
+- Nunca: push na branch principal, merge, deploy, release, ou escrita fora da worktree do loop.
+- Fronteiras do projeto entram no contrato: infra e caminhos proibidos (no BinaryDome: VPS, `C:Program FilesDNSSecurity`) e arquivos críticos que exigem menção explícita (no BinaryDome: CLAUDE.md §10). O refinamento lê CLAUDE.md/AGENTS.md do projeto para propor essa lista.
 
 ## 5. Arquivos da skill
 - `skills/loop-eng/SKILL.md` — fluxo do orquestrador (fases, consenso, freios, injeções, estados).
