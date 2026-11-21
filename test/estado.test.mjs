@@ -6,7 +6,8 @@ import { parseEstado, serializeEstado, STATUS, TERMINAIS, NIVEIS } from '../scri
 const modelo = readFileSync(new URL('../skills/loop-eng/modelos/estado.md', import.meta.url), 'utf8')
   .replaceAll('<slug>', 'exportar-csv')
   .replaceAll('<orcamento_tokens>', '2000000')
-  .replaceAll('<orcamento_chamadas>', '200');
+  .replaceAll('<orcamento_chamadas>', '200')
+  .replaceAll('<base>', 'main');
 
 const SEPARADOR = '|----|--------|--------|-------|--------|--------------|-----------|--------------|--------|\n';
 
@@ -33,6 +34,7 @@ test('parse lê cabeçalho, rodada numérica e log', () => {
   const e = parseEstado(preenchido);
   assert.equal(e.cab.slug, 'exportar-csv');
   assert.equal(e.cab.fase, 'planejamento');
+  assert.equal(e.cab.base, 'main');
   assert.equal(e.cab.estado_terminal, '');
   assert.equal(e.cab.orcamento_tokens, '2000000');
   assert.strictEqual(e.tarefas[0].rodada, 2);

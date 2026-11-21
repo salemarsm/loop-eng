@@ -84,3 +84,13 @@ test('mensagem varia com estado_terminal', () => {
   com('sucesso');
   assert.match(cli(repo, 'inject', 'y').stdout, /; vale no próximo retomar/);
 });
+
+test('inject commita só injecoes.md; arquivo staged fora de docs/loops continua staged', () => {
+  const { repo, contrato } = criaRepo();
+  const wt = criaLoop(repo, contrato, 'demo');
+  writeFileSync(path.join(wt, 'fora.txt'), 'fora\n');
+  git(wt, 'add', 'fora.txt');
+  assert.equal(cli(repo, 'inject', 'x').status, 0);
+  assert.equal(git(wt, 'show', '--name-only', '--format=', 'HEAD'), 'docs/loops/demo/injecoes.md');
+  assert.equal(git(wt, 'diff', '--cached', '--name-only'), 'fora.txt');
+});

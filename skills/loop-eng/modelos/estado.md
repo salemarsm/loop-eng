@@ -3,6 +3,7 @@
 - fase: planejamento
 - estado_terminal:
 - contrato: v1
+- base: <base>
 - quadro: off
 - project:
 - tokens_subagentes: 0

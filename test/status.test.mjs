@@ -58,3 +58,11 @@ test('pendingInjections: pendentes com linha, continuacao e CRLF', () => {
   assert.deepEqual(pendingInjections(texto.replace(/\n/g, '\r\n')), esperado);
   assert.deepEqual(pendingInjections('# Injeções — demo\n'), []);
 });
+
+test('status imprime a base gravada no estado.md', () => {
+  const { repo, contrato } = criaRepo();
+  criaLoop(repo, contrato, 'demo');
+  const r = cli(repo, 'status', 'demo');
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(r.stdout.split(/\r?\n/).includes('base: main'), r.stdout);
+});

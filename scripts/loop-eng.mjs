@@ -51,6 +51,7 @@ function init(args) {
   if (!slug || !contratoPath) {
     throw new Error('uso: loop-eng init <slug> <contrato-path> [--orcamento-tokens N] [--orcamento-chamadas N]');
   }
+  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`slug inválido: "${slug}" (permitido: ^[a-z0-9-]+$)`);
   const tokens = opcaoNumerica(args, '--orcamento-tokens', ORCAMENTO_TOKENS_PADRAO);
   const chamadas = opcaoNumerica(args, '--orcamento-chamadas', ORCAMENTO_CHAMADAS_PADRAO);
 
@@ -71,6 +72,7 @@ function init(args) {
   const dir = path.join(worktree, 'docs', 'loops', slug);
   fs.mkdirSync(dir, { recursive: true });
   const preenche = (t) => t.replaceAll('<slug>', slug)
+    .replaceAll('<base>', base)
     .replaceAll('<orcamento_tokens>', String(tokens))
     .replaceAll('<orcamento_chamadas>', String(chamadas));
   fs.writeFileSync(path.join(dir, 'contrato.md'), contrato);
@@ -125,7 +127,7 @@ function inject(args) {
   const entrada = [`- [ ] ${agora()} — ${primeira}`, ...demais.map((l) => `  ${l}`)].join('\n');
   fs.writeFileSync(arquivo, `${atual}${atual.endsWith('\n') || atual === '' ? '' : '\n'}${entrada}\n`);
   git(loop.path, ['add', path.join(rel, 'injecoes.md')]);
-  git(loop.path, ['commit', '-m', 'chore(loop): injeção']);
+  git(loop.path, ['commit', '-m', 'chore(loop): injeção', '--', path.join(rel, 'injecoes.md')]);
   const quando = !terminal ? 'será lida no próximo checkpoint'
     : terminal === 'bloqueado' ? 'responde ao bloqueio — retome o loop'
       : 'vale no próximo retomar';
@@ -143,6 +145,7 @@ function status(args) {
   return [
     `loop: ${loop.slug}`,
     `worktree: ${loop.path}`,
+    `base: ${cab.base || '—'}`,
     `fase: ${cab.fase}`,
     `estado_terminal: ${cab.estado_terminal || '—'}`,
     'quadro:',
@@ -245,7 +248,7 @@ function quadroSync(args) {
   fs.writeFileSync(arquivoEstado, serializeEstado(estado));
   const arquivos = [path.join(rel, 'estado.md'), ...(fs.existsSync(arquivoQuadro) ? [path.join(rel, '.quadro.json')] : [])];
   git(loop.path, ['add', ...arquivos]);
-  if (git(loop.path, ['status', '--porcelain', '--', ...arquivos])) git(loop.path, ['commit', '-m', 'chore(loop): quadro']);
+  if (git(loop.path, ['status', '--porcelain', '--', ...arquivos])) git(loop.path, ['commit', '-m', 'chore(loop): quadro', '--', ...arquivos]);
   return resultado;
 }
 

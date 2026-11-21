@@ -84,3 +84,24 @@ test('init com fetch falhando dá erro explícito e não cria nada', () => {
   assert.equal(existsSync(path.join(repo, '.claude', 'worktrees', 'loop-demo')), false);
   assert.equal(git(repo, 'branch', '--list', 'loop/demo'), '');
 });
+
+test('init com slug fora de ^[a-z0-9-]+$ falha antes de qualquer git e não cria nada', () => {
+  const { repo, contrato } = criaRepo();
+  for (const slug of ['../x', 'a/b', 'Maiusc', 'com espaço']) {
+    const r = init(repo, [slug, contrato]);
+    assert.notEqual(r.status, 0, slug);
+    assert.match(r.stderr, /slug inválido/, slug);
+  }
+  assert.equal(existsSync(path.join(repo, '.claude')), false);
+  assert.equal(existsSync(path.join(path.dirname(repo), 'x')), false);
+  assert.equal(git(repo, 'branch', '--list', 'loop/*'), '');
+  assert.equal(git(repo, 'worktree', 'list', '--porcelain').split('\n').filter((l) => l.startsWith('worktree ')).length, 1);
+});
+
+test('init em repo sem origin/HEAD grava base: main no estado.md', () => {
+  const { repo, contrato } = criaRepo();
+  assert.throws(() => git(repo, 'symbolic-ref', '-q', 'refs/remotes/origin/HEAD'));
+  assert.equal(init(repo, ['demo', contrato]).status, 0);
+  const estado = readFileSync(path.join(repo, '.claude', 'worktrees', 'loop-demo', 'docs', 'loops', 'demo', 'estado.md'), 'utf8');
+  assert.match(estado, /^- base: main$/m);
+});

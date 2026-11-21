@@ -161,3 +161,16 @@ test('quadro com valor desconhecido: erro explícito e gh não é chamado', () =
   assert.match(r.stderr, /quadro inválido/);
   assert.equal(chamadas(ctx).length, 0);
 });
+
+for (const [nome, env] of [['sucesso', {}], ['falha do gh', { FAKE_GH_FAIL: '1' }]]) {
+  test(`quadro-sync (${nome}) commita só arquivos do loop; staged fora de docs/loops continua staged`, () => {
+    const ctx = preparaLoop('github', [linha(1, 'pendente')]);
+    writeFileSync(path.join(ctx.wt, 'fora.txt'), 'fora\n');
+    git(ctx.wt, 'add', 'fora.txt');
+    assert.equal(sync(ctx, env).status, 0);
+    assert.equal(git(ctx.wt, 'log', '-1', '--format=%s'), 'chore(loop): quadro');
+    const commitados = git(ctx.wt, 'show', '--name-only', '--format=', 'HEAD').split('\n');
+    assert.ok(commitados.every((f) => f.startsWith('docs/loops/demo/')), commitados.join(','));
+    assert.equal(git(ctx.wt, 'diff', '--cached', '--name-only'), 'fora.txt');
+  });
+}
