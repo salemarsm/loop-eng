@@ -18,6 +18,9 @@ O repositório é privado: o `gh`/git da sua máquina precisa ter acesso a `sale
 - Node ≥ 22 (o CLI não tem dependências npm) e git.
 - `gh` autenticado (`gh auth login`) para abrir o PR.
 - Só para `quadro: github`: escopo `project`, via `gh auth refresh -s project`.
+- Windows: a worktree fica em `.claude/worktrees/loop-<slug>` e os caminhos ficam longos; ligue `git config --global core.longpaths true` para não estourar o limite de 260 caracteres.
+
+A worktree `.claude/worktrees/` aparece como não rastreada no checkout principal. Para escondê-la sem mexer no `.gitignore` do projeto, acrescente `.claude/worktrees/` a `.git/info/exclude`.
 
 ## Uso
 
@@ -61,6 +64,12 @@ Com `quadro: github` no contrato, o loop espelha as tarefas num Project `loop-en
 - Tokens do próprio orquestrador não são medidos; o teto de chamadas de subagentes cobre isso.
 - Execução sequencial, uma tarefa por vez.
 - O loop nunca faz push na branch principal, merge, deploy ou release, nem escreve fora da worktree: o merge do PR é seu.
+- Se o `init` falhar no meio (por exemplo, depois de criar a worktree), limpe à mão antes de tentar de novo, na raiz do projeto:
+
+  ```
+  git worktree remove --force .claude/worktrees/loop-<slug>
+  git branch -D loop/<slug>
+  ```
 
 ## Decisões
 
