@@ -13,7 +13,7 @@ subagentes, roda a verificação, decide consenso e mantém o estado em disco.
 1. **Único portão humano = aprovação do contrato (Fase 0).** Depois dele nada pede ok ao
    usuário, inclusive contrato v2, v3… vindo de injeção. Só para em estado terminal.
 2. **Nunca**: push na branch principal, merge, deploy, release, escrita fora da worktree
-   do loop (exceção: rascunho do contrato no scratchpad na Fase 0).
+   do loop (exceção: arquivos de trabalho no scratchpad — contrato, mensagem de commit, corpo do PR).
 3. **Nunca reescreva histórico**: sem `revert` de tarefa aceita, `reset` de commit,
    `--amend`, `push --force`. Mudança em tarefa aceita = tarefa corretiva nova por cima.
 4. **Você não escreve código de tarefa** nem conserta o do implementador. Ninguém aprova o próprio trabalho.
@@ -87,7 +87,7 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 - Prompt = arquivo de `prompts/` com cada `{{campo}}` substituído (vazio se não houver):
   `{{contrato}}` = `contrato.md` vigente inteiro; `{{tarefa}}` = linha do plano + texto
   dos critérios que ela cobre; `{{worktree}}` = `WT`; `{{nonce}}` = novo a cada despacho, `node -e
-  "console.log(require('crypto').randomBytes(8).toString('hex'))"` (aparece no conteúdo → outro).
+  "console.log(require('crypto').randomBytes(8).toString('hex'))"` (aparece no conteúdo → outro). Ordem: troque `{{nonce}}` no modelo **primeiro**, depois os demais campos numa só passada, sem substituir de novo dentro do conteúdo preenchido.
 - **Checkout principal intocado**: antes de cada despacho guarde `git status --porcelain`
   da raiz do projeto; no retorno, compare. Mudou → Log, e a rodada (de tarefa, de plano
   ou final) conta como reprovada. Não reverta nada ali (pode ser do usuário): só reporte.
@@ -131,7 +131,7 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 4. Aprovado → linhas novas **ao fim** do `plano.md` (nada existente muda, salvo a marca
    "removida em vN"), no quadro como `pendente`; `fase: execucao`; persista; Fase 2.
 
-## Fase 2 — Execução (`fase: execucao`), tarefa por tarefa na ordem do plano
+## Fase 2 — Execução (`fase: execucao`), tarefa por tarefa na ordem do quadro
 
 Uma **rodada** = despacho do implementador + sua verificação + (se verde) revisão.
 
@@ -139,14 +139,14 @@ Uma **rodada** = despacho do implementador + sua verificação + (se verde) revi
 persistida **antes** do passo seguinte (despacho, verificação, revisão).
 
 1. Checkpoint. Tarefa → `executando`, rodada +1, **persista**, `P` = `git -C "<WT>" rev-parse
-   HEAD` (HEAD do último persist), despache. `BASE` = `commit` da última `aceita` do quadro
+   HEAD` (HEAD do último persist), despache. `BASE` = `commit` da última `aceita` do quadro (ordem das linhas = ordem de execução)
    (nenhuma → `git -C "<WT>" merge-base HEAD origin/<base>`): o diff pega todo o não aceito.
 2. Implementador no nível atual, com tarefa, contrato e, a partir da rodada 2, a saída
    literal da última verificação em `{{saida_verificacao}}` e os achados de **todos** os
    revisores que reprovaram em `{{feedback}}` (só as linhas de achado).
    **No retorno**: `git -C "<WT>" status --porcelain -- docs/loops` vazio e `rev-parse HEAD`
    = `P` (commits `P..HEAD` só `chore(loop): injeção` em `injecoes.md` são o `inject` do
-   usuário → `P` = `HEAD`). Senão: `git -C "<WT>" checkout <P> -- docs/loops` + `git -C "<WT>"
+   usuário → `P` = `HEAD`). Senão: `git -C "<WT>" checkout --no-overlay <P> -- docs/loops` + `git -C "<WT>"
    clean -fdq -- docs/loops`, rodada **reprovada por gaming** (Log), sem verificação nem
    revisão; commit dele não é desfeito (entra no diff desde `BASE`).
 3. `PERGUNTA:` não vazia → procure a resposta no contrato. Se ele responde, redespache
@@ -201,7 +201,7 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
 1. Some os tokens e chamadas acumulados em `tokens_subagentes` e `chamadas`.
 2. Leia `injecoes.md`; para cada `- [ ]` pendente, classifique e aplique:
    - **dentro-do-contrato** (preferência, prioridade, dica): aplica — reordena
-     pendentes ou passa a dica no `{{feedback}}` da tarefa afetada.
+     pendentes (movendo as linhas no quadro) ou passa a dica no `{{feedback}}` da tarefa afetada.
    - **muda-contrato** — pedido explícito de remover, trocar ou acrescentar algo que o
      contrato nomeia (ex.: "não precisa do filtro por data" com C3 = filtro por data).
      A injeção é mais nova e **vence por padrão**; não é conflito. Grave `contrato.md`
