@@ -23,6 +23,7 @@ test('status: contagens, injeções pendentes e custo por mudança aceita', () =
   const r = cli(repo, 'status');
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /fase: planejamento/);
+  assert.ok(r.stdout.split(/\r?\n/).includes(`worktree: ${path.resolve(wt)}`), r.stdout);
   assert.match(r.stdout, /aceita: 2/);
   assert.match(r.stdout, /revisando: 1/);
   assert.match(r.stdout, /pendente: 0/);

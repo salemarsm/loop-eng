@@ -142,6 +142,7 @@ function status(args) {
   const custo = aceitas === 0 ? '—' : String(Math.round(tokens / aceitas));
   return [
     `loop: ${loop.slug}`,
+    `worktree: ${loop.path}`,
     `fase: ${cab.fase}`,
     `estado_terminal: ${cab.estado_terminal || '—'}`,
     'quadro:',

@@ -5,9 +5,8 @@ description: Orquestra um requisito inteiro em loop autônomo com consenso entre
 
 # loop-eng — orquestrador
 
-Você é o **orquestrador**. Você conduz o refinamento com o usuário e, depois do contrato
-aprovado, despacha subagentes, roda a verificação, decide consenso e mantém o estado em
-disco. Você não implementa as tarefas.
+Você é o **orquestrador**: conduz o refinamento e, aprovado o contrato, despacha
+subagentes, roda a verificação, decide consenso e mantém o estado em disco.
 
 ## Fronteiras fixas (valem sempre, nenhum contrato muda)
 
@@ -34,14 +33,16 @@ disco. Você não implementa as tarefas.
 
 ## CLI e caminhos
 
-- CLI: `node "<diretório base da skill>/../../scripts/loop-eng.mjs" <subcomando>` — o
-  diretório base é o anunciado ao carregar a skill ("Base directory for this skill").
-  Rode **sempre com cwd = raiz do projeto** (checkout principal, nunca dentro da
-  worktree), caminhos entre aspas. Subcomandos: `slug "<texto>"`, `init <slug>
-  <contrato> [--orcamento-tokens N] [--orcamento-chamadas N]` (imprime a worktree),
-  `inject [slug] <texto>`, `status [slug]`, `quadro-sync [slug]`.
-- `WT` = worktree absoluta; estado em `WT/docs/loops/<slug>/` (`contrato.md`,
-  `plano.md`, `estado.md`, `injecoes.md`). Prompts em `<diretório base>/prompts/`.
+- CLI: `node "<diretório base da skill>/../../scripts/loop-eng.mjs" <subcomando>` (base =
+  "Base directory for this skill" anunciado ao carregar). **cwd = raiz do projeto**
+  (checkout principal, nunca a worktree), caminhos entre aspas. Subcomandos: `slug
+  '<texto>'`, `init <slug> <contrato> [--orcamento-tokens N] [--orcamento-chamadas N]`
+  (imprime a worktree), `inject [slug] '<texto>'`, `status [slug]` (imprime
+  `worktree: <caminho absoluto>`), `quadro-sync [slug]`.
+- **Texto do usuário** (requisito no `slug`, texto do `inject`) vai como **um único
+  argumento entre aspas simples**, cada `'` escapado (`'\''` no Bash, `''` no
+  PowerShell) — nunca sem aspas, entre aspas duplas ou interpolado no comando.
+- `WT` = worktree absoluta; estado em `WT/docs/loops/<slug>/`. Prompts em `<base>/prompts/`.
 - Base remota: `git -C "<WT>" symbolic-ref --short refs/remotes/origin/HEAD` (tire `origin/`).
 
 ## Roteamento de argumentos
@@ -50,12 +51,15 @@ disco. Você não implementa as tarefas.
 |---|---|
 | vazio | pergunte o requisito e siga para a Fase 0 |
 | texto livre | é o requisito → Fase 0 (`refinamento.md`) |
-| `inject [slug] <texto>` | rode o CLI `inject` e responda a saída dele, literal |
+| `inject [slug] <texto>` | rode o CLI `inject` e responda a saída dele, literal; se o loop está em `bloqueado` e esta sessão pode continuá-lo, siga para **Retomar** |
 | `status [slug]` | rode o CLI `status` e responda a saída |
 | `retomar <slug>` | seção **Retomar** |
 
-Mensagem solta do usuário na sessão com o loop rodando também é injeção: grave-a com o
-CLI `inject` e trate no próximo checkpoint.
+Mensagem solta do usuário na sessão do loop também é injeção — grave-a com o CLI
+`inject` primeiro, sempre:
+- loop rodando → trate no próximo checkpoint;
+- loop parado em `bloqueado` (a mensagem responde ao bloqueio) → em seguida **Retomar**;
+- parado em outro estado terminal → só grave e diga que vale no próximo `retomar`.
 
 ## estado.md — regras de escrita (o CLI faz parse estrito)
 
@@ -73,7 +77,7 @@ CLI `inject` e trate no próximo checkpoint.
 
 Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitamente.
 **Contrato aprovado:**
-1. `slug "<requisito curto>"` → slug.
+1. `slug '<requisito curto>'` → slug.
 2. `init <slug> "<contrato no scratchpad>" --orcamento-tokens <do contrato>
    --orcamento-chamadas <do contrato>` → `WT`.
 3. Se o contrato diz `quadro: github`: confira `gh auth status` (escopo `project`). Com
@@ -111,20 +115,36 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 
 ## Fase 1 — Planejamento (`fase: planejamento`)
 
-1. Planejador com contrato, plano vazio, feedback vazio. `PERGUNTA:` não vazia →
-   **bloqueado** (pergunte ao usuário).
-2. Confira você: todo `Cn` na linha `COBERTURA:` e na tabela. Faltou → é achado.
-3. Revisor de plano com contrato + plano (sem as justificativas do planejador fora da tabela).
+1. Planejador com contrato, plano e feedback vazios. `PERGUNTA:` não vazia → **bloqueado**.
+2. Confira você: todo `Cn` na linha `COBERTURA:` e na tabela. Faltou → é achado. (Em
+   modo corretivo, só os critérios tocados pelas tarefas novas.)
+3. Revisor de plano com contrato + plano (sem as justificativas do planejador fora da
+   tabela); `{{feedback}}` vazio no primeiro planejamento.
 4. Reprovado (ou cobertura falha) → planejador de novo com os achados em `{{feedback}}`.
    Até **2 rodadas de revisão de plano**; a 2ª reprovação → **estagnado**.
 5. Aprovado → tabela em `plano.md`; uma linha no quadro por tarefa (`pendente`, nível
    do plano, rodada 0, vereditos `—`, commit `—`); `fase: execucao`; checkpoint.
 
+### Planejamento corretivo (achados do revisor final ou injeção `muda-contrato`)
+
+1. Planejador com `{{plano}}` = `plano.md` inteiro e `{{feedback}}` = achados ou injeção
+   + contrato novo. Ele devolve só as tarefas novas, ids depois do maior existente.
+2. Acrescente as linhas novas **ao fim** do `plano.md` (nada existente muda, salvo a
+   marca "removida em vN" de pendentes afetadas).
+3. Revisor de plano com `{{plano}}` = `plano.md` inteiro já com as linhas novas e
+   `{{feedback}}` = "modo corretivo: tarefas novas <ids>; motivo: <achados/injeção>".
+   Cobertura conferida só nos critérios tocados. Mesmos freios do passo 4 da Fase 1.
+4. Aprovado → linhas novas no quadro `pendente`; `fase: execucao`; persista; Fase 2.
+
 ## Fase 2 — Execução (`fase: execucao`), tarefa por tarefa na ordem do plano
 
 Uma **rodada** = despacho do implementador + sua verificação + (se verde) revisão.
 
-1. Checkpoint. Tarefa → `executando`, rodada +1. Anote `BASE=$(git -C "<WT>" rev-parse HEAD)`.
+**Persistir** = gravar `estado.md` + Checkpoint passos 4–5. Toda mudança de status é
+persistida **antes** do passo seguinte (despacho, verificação, revisão).
+
+1. Checkpoint. Anote `BASE=$(git -C "<WT>" rev-parse HEAD)`. Tarefa → `executando`,
+   rodada +1, **persista**, depois despache.
 2. Implementador no nível atual, com tarefa, contrato e, a partir da rodada 2, a saída
    literal da última verificação em `{{saida_verificacao}}` e os achados de **todos** os
    revisores que reprovaram em `{{feedback}}` (só as linhas de achado).
@@ -132,21 +152,20 @@ Uma **rodada** = despacho do implementador + sua verificação + (se verde) revi
    citando a cláusula (a rodada não conta). Se não responde: **não escolha valor**,
    nem o "padrão" que o implementador deixou; tarefa `bloqueada`, loop **bloqueado**,
    sem revisão e sem commit — mesmo com a verificação verde.
-4. `verificando`: rode **você mesmo**, com cwd = `WT`, o comando `verificacao` da
+4. `verificando` (persista): rode **você mesmo**, com cwd = `WT`, o comando `verificacao` da
    tarefa e os "Comandos de verificação" do contrato. Guarde comando + saída.
 5. **Vermelho → fim da rodada.** Não despache revisor, não commite. Volta ao passo 1
    (freios antes) com a saída literal. A alegação do implementador é irrelevante.
-6. Verde → `revisando`. Gere o diff (inclui arquivos novos, nada fica staged):
+6. Verde → `revisando` (persista). Gere o diff (inclui arquivos novos, nada fica staged):
    `git -C "<WT>" add -A -- . ":(exclude)docs/loops"` →
    `git -C "<WT>" diff --cached <BASE>` → `git -C "<WT>" reset -q`.
 7. Em paralelo (uma mensagem, vários Agent): conformidade, qualidade e especialista se
    houver, cada um com contrato, tarefa, diff inline e a saída da verificação.
 8. Registre cada veredito no quadro. **Todos `aprovado`** → aceite (passo 9). Qualquer
    `reprovado` → fim da rodada, volta ao passo 1 com os achados.
-9. Aceite: `git -C "<WT>" add -A -- . ":(exclude)docs/loops"` e
-   `git -C "<WT>" commit -m "feat(loop): <id> <titulo>"` (com a linha de atribuição
-   de commit da sessão, se houver). Hash curto → coluna `commit`, status `aceita`.
-   Checkpoint. Próxima tarefa.
+9. Aceite: `git -C "<WT>" add -A -- . ":(exclude)docs/loops"` e `git -C "<WT>" commit
+   -m "feat(loop): <id> <titulo>"` (+ linha de atribuição da sessão, se houver). Hash
+   curto → `commit`, status `aceita`, checkpoint, próxima tarefa.
 10. Todas `aceita` → Fase 3.
 
 ### Freios por tarefa (confira ao fim de cada rodada não aceita)
@@ -156,26 +175,24 @@ Uma **rodada** = despacho do implementador + sua verificação + (se verde) revi
 - Sem progresso e a tarefa **ainda não subiu** → sobe **um** nível (haiku→sonnet,
   sonnet→opus), **zera a rodada** (próxima é a rodada 1 no nível novo), atualiza
   `nivel` no quadro e anota no Log. Revisores passam a `max(padrão, nível novo)`.
-- A escalada acontece **no máximo uma vez por tarefa**. Já subiu, ou já é `opus` →
-  não sobe de novo.
+- Escalada **no máximo uma vez por tarefa**. Já subiu, ou já é `opus` → não sobe de novo.
 - Teto: **3 rodadas** no nível atual. Rodada 3 não aceita → tarefa `estagnada`, loop
   **estagnado** — salvo se essa mesma rodada disparou a escalada (sem progresso e ainda
-  não subiu). Orçamento sobrando não abre rodada 4 nem
-  escalada extra.
+  não subiu). Orçamento sobrando não abre rodada 4 nem escalada extra.
 
 ## Fase 3 — Entrega (`fase: entrega`)
 
 1. Rode cada `verificação:` dos critérios e os comandos do contrato; guarde comando + saída.
 2. Diff da branch: `git -C "<WT>" diff origin/<base>...HEAD -- . ":(exclude)docs/loops"`.
 3. Revisor final (opus) com contrato, critérios + evidência e diff.
-4. Aprovado e toda evidência verde → `git -C "<WT>" push -u origin loop/<slug>` e
+4. Aprovado e toda evidência verde → `estado_terminal: sucesso` e checkpoint final
+   (passos 1, 4–5). **Depois** `git -C "<WT>" push -u origin loop/<slug>` e
    `gh pr create --base <base> --head loop/<slug>` com corpo: tabela `critério |
    verificação | evidência (saída resumida)`, critérios de julgamento humano marcados
    como pendentes, link do Project (`project:` do estado) se houver, tokens e chamadas.
-   **sucesso**.
-5. Reprovado (ou critério vermelho) → planejador em modo corretivo com os achados
-   (`{{plano}}` = plano atual) → revisor de plano → novas tarefas no quadro → Fase 2 →
-   Fase 3 de novo. Até **2 rodadas de revisão final**; a 2ª reprovação → **estagnado**.
+5. Reprovado (ou critério vermelho) → **Planejamento corretivo** com os achados (ele
+   grava e persiste `fase: execucao`) → Fase 2 → Fase 3 de novo. Até **2 rodadas de
+   revisão final**; a 2ª reprovação → **estagnado**.
 
 ## Checkpoint (antes de cada rodada e entre tarefas)
 
@@ -185,23 +202,22 @@ Uma **rodada** = despacho do implementador + sua verificação + (se verde) revi
      pendentes ou passa a dica no `{{feedback}}` da tarefa afetada.
    - **muda-contrato** — pedido explícito de remover, trocar ou acrescentar algo que o
      contrato nomeia (ex.: "não precisa do filtro por data" com C3 = filtro por data).
-     A injeção é mais nova, então **vence por padrão**; isso não é conflito. Grava `contrato.md` v(N+1) —
-     critério removido fica riscado e anotado (`~~C3 …~~ removido em v2: injeção <ts>`),
-     nunca apagado; alterado ganha nota; `contrato: vN+1` no estado. Tarefas
-     **pendentes** afetadas saem do quadro (no `plano.md` a linha fica, com
-     "removida em vN" no título, para o id não ser reusado; registre no Log) e vão ao planejador
-     em modo corretivo, com a injeção + contrato novo em `{{feedback}}` → revisor de
-     plano. Tarefas **aceitas** afetadas: tarefa corretiva nova por cima (planejador),
-     nunca revert. Sem pedir aprovação ao usuário.
+     A injeção é mais nova e **vence por padrão**; não é conflito. Grave `contrato.md`
+     v(N+1): critério removido fica riscado e anotado (`~~C3 …~~ removido em v2:
+     injeção <ts>`), nunca apagado; `contrato: vN+1` no estado. **Pendentes** afetadas
+     saem do quadro (no `plano.md` ficam, com "removida em vN" no título, para o id não
+     ser reusado; Log); **aceitas** afetadas ganham tarefa corretiva por cima, nunca
+     revert. Ambas vão ao **Planejamento corretivo**. Sem pedir aprovação ao usuário.
    - **conflito** — só quando o efeito é indecidível: quebra um critério que a injeção
      não menciona, ou contradiz outra injeção pendente → **bloqueado**, pergunte.
    - Marque a primeira linha: `- [x] <ts> — <texto> [aplicada <YYYY-MM-DDTHH:MM>:
      dentro-do-contrato|muda-contrato|conflito]`. Nunca apague entrada. Log no estado.
 3. Orçamento: `tokens_subagentes >= orcamento_tokens` ou `chamadas >= orcamento_chamadas`
    → **esgotado**, mesmo que todas as tarefas estejam aceitas.
-4. Grave `estado.md` e commite só `docs/loops/<slug>` (`chore(loop): estado`).
-5. `quadro` ≠ `off` → CLI `quadro-sync <slug>`. Falha nunca para o loop (o CLI marca
-   `dessincronizado` e o próximo checkpoint ressincroniza).
+4. Grave `estado.md` e commite só o estado: `git -C "<WT>" add docs/loops/<slug>` e
+   `git -C "<WT>" commit -m "chore(loop): estado" -- docs/loops/<slug>` (sem nada a
+   commitar, siga). O código da tarefa em andamento nunca entra nesse commit.
+5. `quadro` ≠ `off` → CLI `quadro-sync <slug>`. Falha nunca para o loop (vira `dessincronizado`; o próximo checkpoint ressincroniza).
 
 ## Estados terminais
 
@@ -220,13 +236,15 @@ Esgotado ou erro nunca vira sucesso. Só `sucesso` faz push e PR.
 
 ## Retomar `<slug>`
 
-1. CLI `status <slug>` (acha a worktree). Leia `contrato.md`, `plano.md`, `estado.md`,
-   `injecoes.md` — só eles; não confie em memória da conversa.
+1. CLI `status <slug>`; `WT` = valor da linha `worktree:`. Leia `contrato.md`,
+   `plano.md`, `estado.md`, `injecoes.md` — só eles; não confie em memória da conversa.
 2. `sucesso`/`no-op` → só reporte. Outro terminal → limpe `estado_terminal`.
 3. Rode um checkpoint (injeções pendentes primeiro: a resposta a um bloqueio vira
    `muda-contrato`/`dentro-do-contrato`). Sem nova informação, o mesmo estado terminal volta.
-4. Tarefa `bloqueada` desbloqueada → **redespache o implementador** (passo 2 da Fase 2,
-   mesma rodada) com a resposta/contrato novo; nunca aceite o que ficou na árvore (pode
-   conter o valor adivinhado).
-5. Continue pela `fase`. Tarefa **interrompida** (sessão caiu em `executando`/
-   `verificando`/`revisando`): rode a verificação na árvore atual e siga do passo 5 da Fase 2.
+4. Tarefa `bloqueada` desbloqueada → **redespache o implementador** (passo 2, mesma
+   rodada) com a resposta; nunca aceite a árvore (pode ter o valor adivinhado).
+5. Continue pela `fase`. Tarefa **interrompida** (o status é persistido antes de cada
+   despacho): `executando` → redespache o implementador (passo 2, mesma rodada);
+   `verificando`/`revisando` → verificação na árvore atual e siga do passo 5. `BASE` =
+   `HEAD` atual — equivalente, pois código de tarefa só é commitado no aceite e entre os
+   dois só há commits `chore(loop)` em `docs/loops`, que o diff exclui.
