@@ -38,26 +38,26 @@ const valor = (a, flag) => a[a.indexOf(flag) + 1];
 const quadroDe = (ctx) => /^- quadro: (.*)$/m.exec(readFileSync(ctx.estado, 'utf8'))[1];
 
 test('primeiro sync cria Project, campo Etapa, itens e etapas', () => {
-  const ctx = preparaLoop('on', [linha(1, 'pendente'), linha(2, 'executando')]);
+  const ctx = preparaLoop('github', [linha(1, 'pendente'), linha(2, 'executando')]);
   const r = sync(ctx);
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stderr, /Etapa/); // aviso único: agrupar a visão por Etapa
   const cs = chamadas(ctx).filter((a) => comando(a) !== 'project item-list');
   assert.deepEqual(cs.map(comando), [
-    'project create', 'project view', 'project field-create', 'project field-list',
+    'project create', 'project view', 'project field-list', 'project field-create', 'project field-list',
     'project item-create', 'project item-create', 'project item-edit', 'project item-edit',
   ]);
   assert.equal(valor(cs[0], '--title'), 'loop-eng: demo');
   assert.equal(valor(cs[0], '--owner'), '@me');
-  assert.equal(valor(cs[2], '--name'), 'Etapa');
-  assert.equal(valor(cs[2], '--data-type'), 'SINGLE_SELECT');
-  assert.equal(valor(cs[2], '--single-select-options'), OPCOES);
-  assert.equal(valor(cs[4], '--title'), 'T1 [sonnet] r1 — titulo 1');
-  assert.equal(valor(cs[6], '--id'), 'PVTI_1');
-  assert.equal(valor(cs[6], '--project-id'), 'PVT_proj7');
-  assert.equal(valor(cs[6], '--field-id'), 'PVTSSF_etapa');
-  assert.equal(valor(cs[6], '--single-select-option-id'), 'opt-pendente');
-  assert.equal(valor(cs[7], '--single-select-option-id'), 'opt-executando');
+  assert.equal(valor(cs[3], '--name'), 'Etapa');
+  assert.equal(valor(cs[3], '--data-type'), 'SINGLE_SELECT');
+  assert.equal(valor(cs[3], '--single-select-options'), OPCOES);
+  assert.equal(valor(cs[5], '--title'), 'T1 [sonnet] r1 — titulo 1');
+  assert.equal(valor(cs[7], '--id'), 'PVTI_1');
+  assert.equal(valor(cs[7], '--project-id'), 'PVT_proj7');
+  assert.equal(valor(cs[7], '--field-id'), 'PVTSSF_etapa');
+  assert.equal(valor(cs[7], '--single-select-option-id'), 'opt-pendente');
+  assert.equal(valor(cs[8], '--single-select-option-id'), 'opt-executando');
 
   const q = JSON.parse(readFileSync(ctx.quadroJson, 'utf8'));
   assert.equal(q.number, 7);
@@ -75,7 +75,7 @@ test('primeiro sync cria Project, campo Etapa, itens e etapas', () => {
 });
 
 test('segundo sync não cria nada e move T1 para aceita', () => {
-  const ctx = preparaLoop('on', [linha(1, 'pendente'), linha(2, 'executando')]);
+  const ctx = preparaLoop('github', [linha(1, 'pendente'), linha(2, 'executando')]);
   assert.equal(sync(ctx).status, 0);
   const antes = chamadas(ctx).length;
   writeFileSync(ctx.estado, readFileSync(ctx.estado, 'utf8').replace(linha(1, 'pendente'), linha(1, 'aceita')));
@@ -93,7 +93,7 @@ test('segundo sync não cria nada e move T1 para aceita', () => {
 });
 
 test('falha do gh: exit 0, dessincronizado; sync seguinte recupera', () => {
-  const ctx = preparaLoop('on', [linha(1, 'pendente')]);
+  const ctx = preparaLoop('github', [linha(1, 'pendente')]);
   const falha = sync(ctx, { FAKE_GH_FAIL: '1' });
   assert.equal(falha.status, 0, falha.stderr);
   assert.notEqual(falha.stderr.trim(), '');
@@ -109,4 +109,55 @@ test('quadro: off não chama o gh', () => {
   assert.equal(r.status, 0, r.stderr);
   assert.equal(chamadas(ctx).length, 0);
   assert.equal(quadroDe(ctx), 'off');
+});
+
+const contaCreate = (ctx) => chamadas(ctx).filter((a) => comando(a) === 'project create').length;
+const urlNoEstado = (ctx) => /^- project: (.*)$/m.exec(readFileSync(ctx.estado, 'utf8'))[1];
+
+test('falha em field-create: retry não cria 2º Project e o project: fica preenchido', () => {
+  const ctx = preparaLoop('github', [linha(1, 'pendente')]);
+  const r1 = sync(ctx, { FAKE_GH_FAIL_ON: 'field-create' });
+  assert.equal(r1.status, 0, r1.stderr);
+  assert.equal(quadroDe(ctx), 'dessincronizado');
+  assert.equal(urlNoEstado(ctx), 'https://github.com/users/fulano/projects/7');
+  const r2 = sync(ctx);
+  assert.equal(r2.status, 0, r2.stderr);
+  assert.equal(quadroDe(ctx), 'github');
+  assert.equal(contaCreate(ctx), 1);
+  assert.equal(urlNoEstado(ctx), 'https://github.com/users/fulano/projects/7');
+  assert.equal(JSON.parse(readFileSync(ctx.quadroJson, 'utf8')).options.aceita, 'opt-aceita');
+});
+
+test('field-create ok mas depois falha: retry usa field-list e não recria o campo', () => {
+  const ctx = preparaLoop('github', [linha(1, 'pendente')]);
+  sync(ctx, { FAKE_GH_FAIL_ON: 'item-create' });
+  assert.equal(quadroDe(ctx), 'dessincronizado');
+  assert.equal(sync(ctx).status, 0);
+  assert.equal(quadroDe(ctx), 'github');
+  assert.equal(contaCreate(ctx), 1);
+  assert.equal(chamadas(ctx).filter((a) => comando(a) === 'project field-create').length, 1);
+  assert.equal(chamadas(ctx).filter((a) => comando(a) === 'project item-create').length, 2); // 1 falha + 1 ok
+  assert.deepEqual(Object.keys(JSON.parse(readFileSync(ctx.quadroJson, 'utf8')).items), ['T1']);
+});
+
+test('começando de dessincronizado o sync roda', () => {
+  const ctx = preparaLoop('dessincronizado', [linha(1, 'pendente')]);
+  const r = sync(ctx);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(quadroDe(ctx), 'github');
+});
+
+test('item-list pede limite alto', () => {
+  const ctx = preparaLoop('github', [linha(1, 'pendente')]);
+  sync(ctx);
+  const lista = chamadas(ctx).find((a) => comando(a) === 'project item-list');
+  assert.ok(Number(valor(lista, '--limit')) >= 1000);
+});
+
+test('quadro com valor desconhecido: erro explícito e gh não é chamado', () => {
+  const ctx = preparaLoop('on', [linha(1, 'pendente')]);
+  const r = sync(ctx);
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /quadro inválido/);
+  assert.equal(chamadas(ctx).length, 0);
 });

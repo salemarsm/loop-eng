@@ -161,18 +161,33 @@ function corpoTarefa(t) {
 
 const tituloTarefa = (t) => `${t.id} [${t.nivel}] r${t.rodada} — ${t.titulo}`;
 
-// Cria o Project e o campo Etapa; devolve o conteúdo inicial de .quadro.json.
-function criaProject(slug) {
-  const criado = gh(['project', 'create', '--owner', '@me', '--title', `loop-eng: ${slug}`]);
-  const { number, url } = criado;
-  const { id: projectId } = gh(['project', 'view', String(number), '--owner', '@me']);
-  gh(['project', 'field-create', String(number), '--owner', '@me', '--name', 'Etapa',
-    '--data-type', 'SINGLE_SELECT', '--single-select-options', STATUS.join(',')]);
-  const etapa = gh(['project', 'field-list', String(number), '--owner', '@me']).fields.find((f) => f.name === 'Etapa');
-  if (!etapa) throw new Error('campo Etapa não encontrado após a criação');
-  const options = Object.fromEntries(etapa.options.map((o) => [o.name, o.id]));
-  console.error('quadro: no GitHub, agrupe a visão do Project por "Etapa" (Board > Column field > Etapa) — o gh não cria views.');
-  return { quadro: { number, projectId, fieldId: etapa.id, options, items: {} }, url };
+const listaEtapa = (n) => gh(['project', 'field-list', n, '--owner', '@me']).fields.find((f) => f.name === 'Etapa');
+
+// Completa o que falta em .quadro.json; cada passo é salvo, então uma falha no meio é retomável.
+function preparaProject(slug, quadro, salva) {
+  if (!quadro.number) {
+    const { number, url } = gh(['project', 'create', '--owner', '@me', '--title', `loop-eng: ${slug}`]);
+    Object.assign(quadro, { number, url });
+    salva();
+    console.error('quadro: no GitHub, agrupe a visão do Project por "Etapa" (Board > Column field > Etapa) — o gh não cria views.');
+  }
+  const n = String(quadro.number);
+  if (!quadro.projectId) {
+    quadro.projectId = gh(['project', 'view', n, '--owner', '@me']).id;
+    salva();
+  }
+  if (!quadro.fieldId) {
+    let etapa = listaEtapa(n);
+    if (!etapa) {
+      gh(['project', 'field-create', n, '--owner', '@me', '--name', 'Etapa',
+        '--data-type', 'SINGLE_SELECT', '--single-select-options', STATUS.join(',')]);
+      etapa = listaEtapa(n);
+    }
+    if (!etapa) throw new Error('campo Etapa não encontrado após a criação');
+    quadro.options = Object.fromEntries(etapa.options.map((o) => [o.name, o.id]));
+    quadro.fieldId = etapa.id;
+    salva();
+  }
 }
 
 function sincroniza(tarefas, quadro, salva) {
@@ -186,7 +201,7 @@ function sincroniza(tarefas, quadro, salva) {
     salva();
   }
   if (tarefas.some((t) => !quadro.items[t.id].draftId)) {
-    const porItem = new Map(gh(['project', 'item-list', n, '--owner', '@me']).items.map((i) => [i.id, i.content?.id]));
+    const porItem = new Map(gh(['project', 'item-list', n, '--owner', '@me', '--limit', '1000']).items.map((i) => [i.id, i.content?.id]));
     for (const t of tarefas) quadro.items[t.id].draftId = porItem.get(quadro.items[t.id].itemId) ?? '';
     salva();
   }
@@ -208,27 +223,24 @@ function quadroSync(args) {
   const arquivoQuadro = path.join(loop.path, rel, '.quadro.json');
   const estado = parseEstado(fs.readFileSync(arquivoEstado, 'utf8'));
   if (estado.cab.quadro === 'off') return 'quadro: off — nada a sincronizar';
+  if (!['github', 'dessincronizado'].includes(estado.cab.quadro)) {
+    throw new Error(`quadro inválido em estado.md: "${estado.cab.quadro}" (permitidos: off, github, dessincronizado)`);
+  }
 
-  const salva = (q) => fs.writeFileSync(arquivoQuadro, `${JSON.stringify(q, null, 2)}\n`);
+  const quadro = fs.existsSync(arquivoQuadro) ? JSON.parse(fs.readFileSync(arquivoQuadro, 'utf8')) : { items: {} };
+  const salva = () => fs.writeFileSync(arquivoQuadro, `${JSON.stringify(quadro, null, 2)}\n`);
   let resultado;
   try {
-    let quadro;
-    let url = estado.cab.project;
-    if (fs.existsSync(arquivoQuadro)) {
-      quadro = JSON.parse(fs.readFileSync(arquivoQuadro, 'utf8'));
-    } else {
-      ({ quadro, url } = criaProject(loop.slug));
-      salva(quadro);
-    }
-    sincroniza(estado.tarefas, quadro, () => salva(quadro));
+    preparaProject(loop.slug, quadro, salva);
+    sincroniza(estado.tarefas, quadro, salva);
     estado.cab.quadro = 'github';
-    estado.cab.project = url;
-    resultado = `quadro sincronizado: ${url}`;
+    resultado = `quadro sincronizado: ${quadro.url}`;
   } catch (err) {
     estado.cab.quadro = 'dessincronizado';
     console.error(`quadro: falha no GitHub, o loop segue sem espelho — ${String(err.stderr ?? err.message).trim()}`);
     resultado = 'quadro: dessincronizado';
   }
+  if (quadro.url) estado.cab.project = quadro.url;
   fs.writeFileSync(arquivoEstado, serializeEstado(estado));
   const arquivos = [path.join(rel, 'estado.md'), ...(fs.existsSync(arquivoQuadro) ? [path.join(rel, '.quadro.json')] : [])];
   git(loop.path, ['add', ...arquivos]);
