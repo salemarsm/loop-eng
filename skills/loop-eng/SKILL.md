@@ -16,8 +16,7 @@ subagentes, roda a verificação, decide consenso e mantém o estado em disco.
    do loop (exceção: rascunho do contrato no scratchpad na Fase 0).
 3. **Nunca reescreva histórico**: sem `revert` de tarefa aceita, `reset` de commit,
    `--amend`, `push --force`. Mudança em tarefa aceita = tarefa corretiva nova por cima.
-4. **Você não escreve código de tarefa** nem conserta o que o implementador deixou. Quem
-   implementa é o implementador; quem aprova são os revisores. Ninguém aprova o próprio trabalho.
+4. **Você não escreve código de tarefa** nem conserta o do implementador. Ninguém aprova o próprio trabalho.
 5. **"Terminei"/"testes passando" do implementador nunca vale.** Você mesmo roda a
    verificação; só a sua saída conta como evidência.
 6. **Revisor nunca recebe o resumo do implementador** — só contrato, tarefa, diff que
@@ -102,24 +101,19 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 | especialista | `revisor-qualidade.md` + linha "Foco: <área>" no topo | ver abaixo | max(sonnet, nível) |
 | revisor final | `revisor-final.md` | general-purpose | opus |
 
-- Especialista quando a tarefa toca: auth, rede, crypto, dados de tenant →
-  `security-scanner`; schema/migração → `migration-reviewer`; hot path → `perf-analyzer`.
-  Se o tipo não existe na lista de agentes, `general-purpose` com o mesmo foco.
+- Especialista: auth/rede/crypto/dados de tenant → `security-scanner`; schema → `migration-reviewer`;
+  hot path → `perf-analyzer`. Tipo ausente na lista de agentes → `general-purpose` com o foco.
 - `nível` = nível **atual** da tarefa (após escalada). Nenhum revisor abaixo do implementador.
-- Revisor: a 1ª linha tem de ser `VEREDITO: aprovado` ou `VEREDITO: reprovado`. Fora
-  disso, redespache uma vez; malformado de novo = `reprovado`.
-- Implementador: termina em `ARQUIVOS:` e `PERGUNTA:`. Qualquer texto depois de
-  `PERGUNTA:` (até "nenhuma") é pergunta.
+- Revisor: 1ª linha `VEREDITO: aprovado|reprovado`; fora disso redespache uma vez, e de novo = `reprovado`.
+- Implementador: qualquer texto depois de `PERGUNTA:` (até "nenhuma") é pergunta.
 - Cada resultado de Agent: some `subagent_tokens` do bloco de uso e conte 1 chamada
   (acumule; grave no checkpoint). Sem `subagent_tokens`, some 0 e anote no Log.
 
 ## Fase 1 — Planejamento (`fase: planejamento`)
 
 1. Planejador com contrato, plano e feedback vazios. `PERGUNTA:` não vazia → **bloqueado**.
-2. Confira você: todo `Cn` na linha `COBERTURA:` e na tabela. Faltou → é achado. (Em
-   modo corretivo, só os critérios tocados pelas tarefas novas.)
-3. Revisor de plano com contrato + plano (sem as justificativas do planejador fora da
-   tabela); `{{feedback}}` vazio no primeiro planejamento.
+2. Confira você: todo `Cn` em `COBERTURA:` e na tabela (corretivo: só os tocados). Faltou → achado.
+3. Revisor de plano com contrato + tabela do plano; `{{feedback}}` vazio.
 4. Reprovado (ou cobertura falha) → planejador de novo com os achados em `{{feedback}}`.
    Até **2 rodadas de revisão de plano**; a 2ª reprovação → **estagnado**.
 5. Aprovado → tabela em `plano.md`; uma linha no quadro por tarefa (`pendente`, nível
@@ -127,14 +121,18 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 
 ### Planejamento corretivo (achados do revisor final ou injeção `muda-contrato`)
 
-1. Planejador com `{{plano}}` = `plano.md` inteiro e `{{feedback}}` = achados ou injeção
-   + contrato novo. Ele devolve só as tarefas novas, ids depois do maior existente.
-2. Acrescente as linhas novas **ao fim** do `plano.md` (nada existente muda, salvo a
-   marca "removida em vN" de pendentes afetadas).
-3. Revisor de plano com `{{plano}}` = `plano.md` inteiro já com as linhas novas e
-   `{{feedback}}` = "modo corretivo: tarefas novas <ids>; motivo: <achados/injeção>".
-   Cobertura conferida só nos critérios tocados. Mesmos freios do passo 4 da Fase 1.
-4. Aprovado → linhas novas no quadro `pendente`; `fase: execucao`; persista; Fase 2.
+1. Planejador com `{{plano}}` = `plano.md` inteiro e `{{feedback}}` = "modo corretivo;
+   próximo id: T<n>; motivo: <achados/injeção + contrato novo>". Ele devolve **só** as
+   tarefas novas/afetadas, nunca o plano inteiro.
+2. Revisor de plano com `{{plano}}` = `plano.md` + as linhas novas (ainda não gravadas)
+   e `{{feedback}}` = "modo corretivo: tarefas novas <ids>; motivo: …". Cobertura só nos
+   critérios tocados.
+3. Reprovado → planejador de novo com `{{feedback}}` = o mesmo contexto corretivo **e** os
+   achados do revisor; devolve de novo só as tarefas novas (mesmos ids). Até 2 rodadas;
+   a 2ª reprovação → **estagnado**.
+4. Aprovado → acrescente as linhas novas **ao fim** do `plano.md` (nada existente muda,
+   salvo a marca "removida em vN"), no quadro como `pendente`; `fase: execucao`;
+   persista; Fase 2.
 
 ## Fase 2 — Execução (`fase: execucao`), tarefa por tarefa na ordem do plano
 
@@ -163,9 +161,11 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
    houver, cada um com contrato, tarefa, diff inline e a saída da verificação.
 8. Registre cada veredito no quadro. **Todos `aprovado`** → aceite (passo 9). Qualquer
    `reprovado` → fim da rodada, volta ao passo 1 com os achados.
-9. Aceite: `git -C "<WT>" add -A -- . ":(exclude)docs/loops"` e `git -C "<WT>" commit
-   -m "feat(loop): <id> <titulo>"` (+ linha de atribuição da sessão, se houver). Hash
-   curto → `commit`, status `aceita`, checkpoint, próxima tarefa.
+9. Aceite: grave a mensagem `feat(loop): <id> <titulo>` (+ linha de atribuição da
+   sessão, se houver) num arquivo do scratchpad com a ferramenta de escrita — o título
+   vem do planejador, nunca vai para a linha de comando —, depois `git -C "<WT>" add -A
+   -- . ":(exclude)docs/loops"` e `git -C "<WT>" commit -F "<arquivo>"`. Hash curto →
+   `commit`, status `aceita`, checkpoint, próxima tarefa.
 10. Todas `aceita` → Fase 3.
 
 ### Freios por tarefa (confira ao fim de cada rodada não aceita)
@@ -214,15 +214,13 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
      dentro-do-contrato|muda-contrato|conflito]`. Nunca apague entrada. Log no estado.
 3. Orçamento: `tokens_subagentes >= orcamento_tokens` ou `chamadas >= orcamento_chamadas`
    → **esgotado**, mesmo que todas as tarefas estejam aceitas.
-4. Grave `estado.md` e commite só o estado: `git -C "<WT>" add docs/loops/<slug>` e
-   `git -C "<WT>" commit -m "chore(loop): estado" -- docs/loops/<slug>` (sem nada a
-   commitar, siga). O código da tarefa em andamento nunca entra nesse commit.
+4. Grave `estado.md`; `git -C "<WT>" add docs/loops/<slug>` e `git -C "<WT>" commit -m
+   "chore(loop): estado" -- docs/loops/<slug>` (nada a commitar → siga). Código de tarefa nunca entra.
 5. `quadro` ≠ `off` → CLI `quadro-sync <slug>`. Falha nunca para o loop (vira `dessincronizado`; o próximo checkpoint ressincroniza).
 
 ## Estados terminais
 
-Ao parar: `estado_terminal` no `estado.md`, tarefa no status correspondente, checkpoint
-(passos 4–5), e reporte ao usuário:
+Ao parar: `estado_terminal` e status da tarefa no `estado.md`, checkpoint (4–5), reporte:
 
 | Estado | Reporte |
 |---|---|
@@ -244,7 +242,9 @@ Esgotado ou erro nunca vira sucesso. Só `sucesso` faz push e PR.
 4. Tarefa `bloqueada` desbloqueada → **redespache o implementador** (passo 2, mesma
    rodada) com a resposta; nunca aceite a árvore (pode ter o valor adivinhado).
 5. Continue pela `fase`. Tarefa **interrompida** (o status é persistido antes de cada
-   despacho): `executando` → redespache o implementador (passo 2, mesma rodada);
+   despacho): `executando` → redespache o implementador (passo 2, mesma rodada) sobre a
+   worktree como está — pode haver edição parcial da tentativa que caiu, e o
+   `{{feedback}}` diz isso a ele;
    `verificando`/`revisando` → verificação na árvore atual e siga do passo 5. `BASE` =
    `HEAD` atual — equivalente, pois código de tarefa só é commitado no aceite e entre os
    dois só há commits `chore(loop)` em `docs/loops`, que o diff exclui.
