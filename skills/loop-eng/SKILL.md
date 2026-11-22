@@ -162,8 +162,9 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
    `git -C "<WT>" diff --cached <BASE> -- . ":(exclude)docs/loops"` → `git -C "<WT>" reset -q`.
 7. Em paralelo (uma mensagem, vários Agent): conformidade, qualidade e especialista se
    houver, cada um com contrato, tarefa, diff inline e a saída da verificação.
-8. Registre cada veredito no quadro. **Todos `aprovado`** → aceite (passo 9). Qualquer
-   `reprovado` → fim da rodada, volta ao passo 1 com os achados.
+8. Registre cada veredito no quadro. Qualquer `reprovado` → fim da rodada, volta ao passo 1
+   com os achados. **Todos `aprovado`** → gere o diff de novo (passo 6): diferente do entregue
+   aos revisores → revisor mexeu na árvore, rodada reprovada (Log); igual → aceite (passo 9).
 9. Aceite: mensagem `feat(loop): <id> <titulo>` (+ atribuição da sessão, se houver) num arquivo
    do scratchpad, com a ferramenta de escrita (o título vem do planejador e nunca vai à linha de
    comando); `git -C "<WT>" add -A -- . ":(exclude)docs/loops"`, `git -C "<WT>" commit -F
@@ -185,10 +186,14 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
 ## Fase 3 — Entrega (`fase: entrega`)
 
 1. Rode cada `verificação:` dos critérios e os comandos do contrato; guarde comando + saída.
+   Critério "o teste prova a correção": rode você o mutante (código revertido) numa worktree
+   descartável no scratchpad (`git worktree add --detach`, depois `worktree remove --force`).
 2. Diff da branch: `git -C "<WT>" diff origin/<base>...HEAD -- . ":(exclude)docs/loops"`.
 3. Revisor final (opus) com contrato, critérios + evidência e diff.
 4. Aprovado e toda evidência verde → `estado_terminal: sucesso` e checkpoint final
-   (passos 1, 4–5). **Depois** `git -C "<WT>" push -u origin loop/<slug>`; corpo num arquivo
+   (passos 1, 4–5). Tire o estado do PR: `git -C "<WT>" rm -rq docs/loops/<slug>` e `commit -m
+   "chore(loop): estado fora do PR"` (o CLI `status` passa a ler o commit anterior).
+   **Depois** `git -C "<WT>" push -u origin loop/<slug>`; corpo num arquivo
    do scratchpad (ferramenta de escrita): tabela `critério | verificação | evidência (saída
    resumida)`, critérios de julgamento humano como pendentes, `project:` do estado se houver,
    tokens e chamadas; `gh pr create --base <base> --head loop/<slug> --title 'loop-eng: <slug>'

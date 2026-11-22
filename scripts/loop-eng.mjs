@@ -137,8 +137,18 @@ function inject(args) {
 function status(args) {
   const loop = resolveLoop(process.cwd(), args[0]);
   const dir = path.join(loop.path, 'docs', 'loops', loop.slug);
-  const { cab, tarefas } = parseEstado(fs.readFileSync(path.join(dir, 'estado.md'), 'utf8'));
-  const pendentes = pendingInjections(fs.readFileSync(path.join(dir, 'injecoes.md'), 'utf8'));
+  // Loop entregue: a Fase 3 tira docs/loops do PR num commit final; o estado vive no commit anterior.
+  let ler = (nome) => fs.readFileSync(path.join(dir, nome), 'utf8');
+  let arquivado = null;
+  if (!fs.existsSync(path.join(dir, 'estado.md'))) {
+    const rel = `docs/loops/${loop.slug}`;
+    const remocao = git(loop.path, ['log', '-1', '--format=%h', '--diff-filter=D', '--', `${rel}/estado.md`]);
+    if (!remocao) throw new Error(`estado.md ausente em ${dir} e sem commit de remoção no histórico`);
+    arquivado = git(loop.path, ['rev-parse', '--short', `${remocao}^`]);
+    ler = (nome) => git(loop.path, ['show', `${arquivado}:${rel}/${nome}`]);
+  }
+  const { cab, tarefas } = parseEstado(ler('estado.md'));
+  const pendentes = pendingInjections(ler('injecoes.md'));
   const aceitas = tarefas.filter((t) => t.status === 'aceita').length;
   const tokens = Number(cab.tokens_subagentes ?? 0);
   const custo = aceitas === 0 ? '—' : String(Math.round(tokens / aceitas));
@@ -154,6 +164,7 @@ function status(args) {
     `tokens_subagentes: ${cab.tokens_subagentes}`,
     `chamadas: ${cab.chamadas}`,
     `custo por mudança aceita: ${custo}`,
+    ...(arquivado ? [`estado arquivado no commit ${arquivado} (removido do PR)`] : []),
   ].join('\n');
 }
 

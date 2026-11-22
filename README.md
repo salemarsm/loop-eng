@@ -53,7 +53,7 @@ O texto da injeção vai entre aspas simples.
 
 Estados terminais: `sucesso` (PR aberto), `no-op` (já atendido), `bloqueado` (falta resposta sua; responda com `inject`), `estagnado` (freios de rodadas esgotados), `esgotado` (orçamento de tokens/chamadas).
 
-Estado em `docs/loops/<slug>/` (`contrato.md`, `plano.md`, `estado.md`, `injecoes.md`), dentro da worktree `.claude/worktrees/loop-<slug>`, na branch `loop/<slug>`.
+Estado em `docs/loops/<slug>/` (`contrato.md`, `plano.md`, `estado.md`, `injecoes.md`), dentro da worktree `.claude/worktrees/loop-<slug>`, na branch `loop/<slug>`. Na entrega, um commit final `chore(loop): estado fora do PR` tira essa pasta do PR; o estado continua no histórico da branch e o `/loop-eng status` o lê de lá.
 
 ## Quadro no GitHub Project (opcional)
 
@@ -61,6 +61,7 @@ Com `quadro: github` no contrato, o loop espelha as tarefas num Project `loop-en
 
 ## Limitações
 
+- O custo é dominado pelo número de chamadas, não pelo tamanho do código: cada subagente custa ~90 mil tokens de contexto inicial. O refinamento estima o orçamento a partir disso.
 - Tokens do próprio orquestrador não são medidos; o teto de chamadas de subagentes cobre isso.
 - Execução sequencial, uma tarefa por vez.
 - O loop nunca faz push na branch principal, merge, deploy ou release, nem escreve fora da worktree: o merge do PR é seu.

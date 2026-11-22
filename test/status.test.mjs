@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { criaRepo, criaLoop, cli } from './helpers.mjs';
 import { pendingInjections } from '../scripts/loop-eng.mjs';
@@ -65,4 +66,18 @@ test('status imprime a base gravada no estado.md', () => {
   const r = cli(repo, 'status', 'demo');
   assert.equal(r.status, 0, r.stderr);
   assert.ok(r.stdout.split(/\r?\n/).includes('base: main'), r.stdout);
+});
+
+test('status de loop entregue lê o estado do commit anterior à remoção de docs/loops', () => {
+  const { repo, contrato } = criaRepo();
+  const wt = criaLoop(repo, contrato, 'demo');
+  const f = path.join(wt, 'docs', 'loops', 'demo', 'estado.md');
+  writeFileSync(f, readFileSync(f, 'utf8').replace('- estado_terminal:', '- estado_terminal: sucesso'));
+  execFileSync('git', ['commit', '-qam', 'chore(loop): estado'], { cwd: wt });
+  execFileSync('git', ['rm', '-rq', 'docs/loops/demo'], { cwd: wt });
+  execFileSync('git', ['commit', '-qm', 'chore(loop): estado fora do PR'], { cwd: wt });
+  const r = cli(repo, 'status', 'demo');
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /estado_terminal: sucesso/);
+  assert.match(r.stdout, /estado arquivado no commit [0-9a-f]{7,}/);
 });
