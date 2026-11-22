@@ -190,8 +190,9 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
 
 1. Rode cada `verificação:` dos critérios e os comandos do contrato; guarde comando + saída.
    Critério "o teste prova a correção": rode você o mutante — `git -C "<WT>" worktree add --detach
-   "<scratchpad>/mut" HEAD`; nela, `git checkout origin/<base> -- <arquivos de produção>` (testes
-   ficam); rode o teste e exija FAIL; `git -C "<WT>" worktree remove --force "<scratchpad>/mut"`.
+   "<scratchpad>/mut" HEAD`; nela rode o teste e exija **PASS** (prova o ambiente); reverta só os
+   arquivos de produção (`git checkout origin/<base> -- <arquivo>`; arquivo novo → `git rm`); rode
+   de novo e exija **FAIL de asserção**, não de ambiente/compilação; `worktree remove --force`.
 2. Diff da branch: `git -C "<WT>" diff origin/<base>...HEAD -- . ":(exclude)docs/loops"`.
 3. Revisor final (opus) com contrato, critérios + evidência e diff.
 4. Aprovado e toda evidência verde → `estado_terminal: sucesso` e checkpoint final
@@ -247,7 +248,8 @@ Esgotado ou erro nunca vira sucesso. Só `sucesso` faz push e PR.
 ## Retomar `<slug>`
 
 1. CLI `status <slug>`; `WT` = linha `worktree:`, `<base>` = linha `base:`. Linha `estado arquivado
-   no commit X` → loop entregue: só reporte, lendo `git -C "<WT>" show X:docs/loops/<slug>/<arquivo>`.
+   no commit X` → loop entregue: lendo `git -C "<WT>" show X:docs/loops/<slug>/<arquivo>`, refaça push/PR se
+   `gh pr view loop/<slug>` não achar o PR (Fase 3 passo 4); senão só reporte.
    Senão leia `contrato.md`, `plano.md`, `estado.md`, `injecoes.md` — só eles; nada de memória.
 2. `sucesso`/`no-op` → só reporte. Outro terminal → limpe `estado_terminal`.
 3. Rode um checkpoint (injeções pendentes primeiro: a resposta a um bloqueio vira
