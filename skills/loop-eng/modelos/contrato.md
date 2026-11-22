@@ -29,8 +29,8 @@
 
 ## Orçamento
 
-- orcamento_tokens: 2000000
-- orcamento_chamadas: 200
+- orcamento_tokens: (calcule pela regra do refinamento: chamadas × 90 000)
+- orcamento_chamadas: (calcule pela regra do refinamento)
 
 ## Quadro
 

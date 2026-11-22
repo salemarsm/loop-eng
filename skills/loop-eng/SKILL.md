@@ -13,7 +13,7 @@ subagentes, roda a verificação, decide consenso e mantém o estado em disco.
 1. **Único portão humano = aprovação do contrato (Fase 0).** Depois dele nada pede ok ao
    usuário, inclusive contrato v2, v3… vindo de injeção. Só para em estado terminal.
 2. **Nunca**: push na branch principal, merge, deploy, release, escrita fora da worktree
-   do loop (exceção: arquivos de trabalho no scratchpad — contrato, mensagem de commit, corpo do PR).
+   do loop (exceção: scratchpad — contrato, mensagem de commit, corpo do PR, worktree descartável do mutante).
 3. **Nunca reescreva histórico**: sem `revert` de tarefa aceita, `reset` de commit,
    `--amend`, `push --force`. Mudança em tarefa aceita = tarefa corretiva nova por cima.
 4. **Você não escreve código de tarefa** nem conserta o do implementador. Ninguém aprova o próprio trabalho.
@@ -162,9 +162,12 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
    `git -C "<WT>" diff --cached <BASE> -- . ":(exclude)docs/loops"` → `git -C "<WT>" reset -q`.
 7. Em paralelo (uma mensagem, vários Agent): conformidade, qualidade e especialista se
    houver, cada um com contrato, tarefa, diff inline e a saída da verificação.
-8. Registre cada veredito no quadro. Qualquer `reprovado` → fim da rodada, volta ao passo 1
-   com os achados. **Todos `aprovado`** → gere o diff de novo (passo 6): diferente do entregue
-   aos revisores → revisor mexeu na árvore, rodada reprovada (Log); igual → aceite (passo 9).
+8. **No retorno dos revisores, antes dos vereditos**: guarda do passo 2 (`docs/loops` + `HEAD` = `P`,
+   com o mesmo restauro) e o diff de novo (passo 6), que tem de ser idêntico ao entregue. Falhou →
+   revisor mexeu na árvore: Log, rodada reprovada **sem contar no teto**, e o `{{feedback}}` do
+   implementador leva a diferença entre os dois diffs com "restaure ao diff revisado". Passou →
+   registre os vereditos: qualquer `reprovado` → fim da rodada (passo 1 com os achados); todos
+   `aprovado` → aceite (passo 9).
 9. Aceite: mensagem `feat(loop): <id> <titulo>` (+ atribuição da sessão, se houver) num arquivo
    do scratchpad, com a ferramenta de escrita (o título vem do planejador e nunca vai à linha de
    comando); `git -C "<WT>" add -A -- . ":(exclude)docs/loops"`, `git -C "<WT>" commit -F
@@ -186,18 +189,20 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
 ## Fase 3 — Entrega (`fase: entrega`)
 
 1. Rode cada `verificação:` dos critérios e os comandos do contrato; guarde comando + saída.
-   Critério "o teste prova a correção": rode você o mutante (código revertido) numa worktree
-   descartável no scratchpad (`git worktree add --detach`, depois `worktree remove --force`).
+   Critério "o teste prova a correção": rode você o mutante — `git -C "<WT>" worktree add --detach
+   "<scratchpad>/mut" HEAD`; nela, `git checkout origin/<base> -- <arquivos de produção>` (testes
+   ficam); rode o teste e exija FAIL; `git -C "<WT>" worktree remove --force "<scratchpad>/mut"`.
 2. Diff da branch: `git -C "<WT>" diff origin/<base>...HEAD -- . ":(exclude)docs/loops"`.
 3. Revisor final (opus) com contrato, critérios + evidência e diff.
 4. Aprovado e toda evidência verde → `estado_terminal: sucesso` e checkpoint final
-   (passos 1, 4–5). Tire o estado do PR: `git -C "<WT>" rm -rq docs/loops/<slug>` e `commit -m
-   "chore(loop): estado fora do PR"` (o CLI `status` passa a ler o commit anterior).
-   **Depois** `git -C "<WT>" push -u origin loop/<slug>`; corpo num arquivo
-   do scratchpad (ferramenta de escrita): tabela `critério | verificação | evidência (saída
-   resumida)`, critérios de julgamento humano como pendentes, `project:` do estado se houver,
-   tokens e chamadas; `gh pr create --base <base> --head loop/<slug> --title 'loop-eng: <slug>'
-   --body-file "<arquivo>"`.
+   (passos 1, 4–5) — é o checkpoint de parada. Corpo do PR num arquivo do scratchpad (ferramenta
+   de escrita), lendo o `estado.md` **agora**: tabela `critério | verificação | evidência (saída
+   resumida)`, critérios de julgamento humano como pendentes, `project:`, tokens e chamadas.
+   Tire o estado do PR: `git -C "<WT>" rm -rq docs/loops/<slug>` e `git -C "<WT>" commit -m
+   "chore(loop): estado fora do PR"`; daí em diante **nada grava em `docs/loops`** (o CLI
+   `status` lê o commit anterior; `inject`/`quadro-sync` recusam). **Depois** `git -C "<WT>"
+   push -u origin loop/<slug>` e `gh pr create --base <base> --head loop/<slug> --title
+   'loop-eng: <slug>' --body-file "<arquivo>"`.
 5. Reprovado (ou critério vermelho) → **Planejamento corretivo** com os achados (persiste `fase:
    execucao`) → Fase 2 → Fase 3. Até **2 rodadas de revisão final**; a 2ª reprovação → **estagnado**.
 
@@ -227,7 +232,7 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
 
 ## Estados terminais
 
-Ao parar: `estado_terminal` e status da tarefa no `estado.md`, checkpoint (4–5), reporte:
+Ao parar: `estado_terminal` e status da tarefa no `estado.md`, checkpoint (4–5) — em `sucesso` já feitos na Fase 3 —, reporte:
 
 | Estado | Reporte |
 |---|---|
@@ -241,8 +246,9 @@ Esgotado ou erro nunca vira sucesso. Só `sucesso` faz push e PR.
 
 ## Retomar `<slug>`
 
-1. CLI `status <slug>`; `WT` = linha `worktree:`, `<base>` = linha `base:`. Leia `contrato.md`,
-   `plano.md`, `estado.md`, `injecoes.md` — só eles; não confie em memória da conversa.
+1. CLI `status <slug>`; `WT` = linha `worktree:`, `<base>` = linha `base:`. Linha `estado arquivado
+   no commit X` → loop entregue: só reporte, lendo `git -C "<WT>" show X:docs/loops/<slug>/<arquivo>`.
+   Senão leia `contrato.md`, `plano.md`, `estado.md`, `injecoes.md` — só eles; nada de memória.
 2. `sucesso`/`no-op` → só reporte. Outro terminal → limpe `estado_terminal`.
 3. Rode um checkpoint (injeções pendentes primeiro: a resposta a um bloqueio vira
    `muda-contrato`/`dentro-do-contrato`). Sem nova informação, o mesmo estado terminal volta.

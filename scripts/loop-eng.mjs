@@ -117,6 +117,7 @@ function carregaLoop(args) {
 
 function inject(args) {
   const { loop, resto } = carregaLoop(args);
+  exigeAtivo(loop);
   const texto = resto.join(' ');
   if (!texto.trim()) throw new Error('uso: loop-eng inject [slug] <texto...>');
   const rel = path.join('docs', 'loops', loop.slug);
@@ -134,19 +135,28 @@ function inject(args) {
   return `injeção gravada em ${arquivo}; ${quando}`;
 }
 
+// Loop entregue: a Fase 3 tira docs/loops/<slug> do PR num commit final e o estado vive
+// no commit anterior a essa remoção. Devolve esse commit, ou null se o loop está ativo.
+function commitArquivado(loop) {
+  const rel = `docs/loops/${loop.slug}`;
+  if (fs.existsSync(path.join(loop.path, rel, 'estado.md'))) return null;
+  const remocao = git(loop.path, ['log', '-1', '--format=%h', '--diff-filter=D', '--', `${rel}/estado.md`]);
+  if (!remocao) throw new Error(`estado.md ausente em ${path.join(loop.path, rel)} e sem commit de remoção no histórico`);
+  return git(loop.path, ['rev-parse', '--short', `${remocao}^`]);
+}
+
+function exigeAtivo(loop) {
+  const arquivado = commitArquivado(loop);
+  if (arquivado) throw new Error(`loop entregue: estado arquivado no commit ${arquivado}; nada a gravar — abra um loop novo`);
+}
+
 function status(args) {
   const loop = resolveLoop(process.cwd(), args[0]);
   const dir = path.join(loop.path, 'docs', 'loops', loop.slug);
-  // Loop entregue: a Fase 3 tira docs/loops do PR num commit final; o estado vive no commit anterior.
-  let ler = (nome) => fs.readFileSync(path.join(dir, nome), 'utf8');
-  let arquivado = null;
-  if (!fs.existsSync(path.join(dir, 'estado.md'))) {
-    const rel = `docs/loops/${loop.slug}`;
-    const remocao = git(loop.path, ['log', '-1', '--format=%h', '--diff-filter=D', '--', `${rel}/estado.md`]);
-    if (!remocao) throw new Error(`estado.md ausente em ${dir} e sem commit de remoção no histórico`);
-    arquivado = git(loop.path, ['rev-parse', '--short', `${remocao}^`]);
-    ler = (nome) => git(loop.path, ['show', `${arquivado}:${rel}/${nome}`]);
-  }
+  const arquivado = commitArquivado(loop);
+  const ler = arquivado
+    ? (nome) => git(loop.path, ['show', `${arquivado}:docs/loops/${loop.slug}/${nome}`])
+    : (nome) => fs.readFileSync(path.join(dir, nome), 'utf8');
   const { cab, tarefas } = parseEstado(ler('estado.md'));
   const pendentes = pendingInjections(ler('injecoes.md'));
   const aceitas = tarefas.filter((t) => t.status === 'aceita').length;
@@ -233,6 +243,7 @@ function sincroniza(tarefas, quadro, salva) {
 
 function quadroSync(args) {
   const loop = resolveLoop(process.cwd(), args[0]);
+  exigeAtivo(loop);
   const rel = path.join('docs', 'loops', loop.slug);
   const arquivoEstado = path.join(loop.path, rel, 'estado.md');
   const arquivoQuadro = path.join(loop.path, rel, '.quadro.json');

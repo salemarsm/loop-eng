@@ -114,7 +114,7 @@ Especialistas: usa os agentes globais (`security-scanner`, `migration-reviewer`,
 - `plano.md` — tarefas com nível, arquivos, verificação.
 - `estado.md` — fase atual, ledger por tarefa (status, rodadas, modelo, tokens, commit), log de injeções, tokens acumulados, custo por mudança aceita.
 - `injecoes.md` — caixa de entrada do usuário.
-Tudo commitado na branch do loop; `retomar` lê só esses arquivos.
+Tudo commitado na branch do loop; `retomar` lê só esses arquivos. Na entrega, depois do checkpoint de parada, um commit `chore(loop): estado fora do PR` remove a pasta para que o PR mostre só o código; o estado segue no histórico da branch e o CLI `status` o lê de lá (issue #4).
 
 ### 4.5.1 Quadro das tarefas (kanban)
 - **Fonte da verdade: tabela-quadro no `estado.md`** — colunas `pendente → executando → verificando → revisando → aceita`, mais `bloqueada` e `estagnada`. Cartão = id, título, nível de modelo, rodada, veredito por revisor, commit.
@@ -130,7 +130,7 @@ Tudo commitado na branch do loop; `retomar` lê só esses arquivos.
 - **estagnado** — freio de progresso disparou; relatório do impasse.
 - **esgotado** — orçamento do contrato acabou; relatório do que foi aceito.
 Esgotado/erro nunca vira sucesso.
-Orçamento = **tokens de subagentes** (o resultado da ferramenta Agent traz `subagent_tokens`) + teto de rodadas por tarefa e de chamadas totais. Tokens do próprio orquestrador não são medidos — limitação declarada no `estado.md`; o teto de chamadas é o freio que cobre isso. *(decisão do orquestrador)*
+Orçamento = **tokens de subagentes** (o resultado da ferramenta Agent traz `subagent_tokens`) + teto de rodadas por tarefa e de chamadas totais. Tokens do próprio orquestrador não são medidos — limitação declarada no `estado.md`; o teto de chamadas é o freio que cobre isso. *(decisão do orquestrador)* Cada chamada custa ~90 mil tokens de contexto inicial, então o orçamento é estimado por número de chamadas, não por tamanho de código (issue #3; regra em `refinamento.md`).
 
 ### 4.7 Fronteiras fixas (não negociáveis no contrato)
 - Branch e worktree próprias (`loop/<slug>` em `.claude/worktrees/loop-<slug>`), criadas da branch principal remota (`origin/<default>`) **logo após o contrato ser aprovado**; primeiro commit = `contrato.md`. Fase 0 escreve o rascunho no scratchpad. Orquestrador passa caminho absoluto da worktree a todo subagente; `retomar` acha o loop por `git worktree list` / branch `loop/<slug>`.

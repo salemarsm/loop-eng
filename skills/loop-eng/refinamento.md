@@ -41,9 +41,9 @@ O contrato só vai para aprovação quando todos os itens estão fechados:
 - [ ] **Orçamento**: `orcamento_tokens` (tokens de subagentes) e `orcamento_chamadas`
       (chamadas de subagente). Cada chamada custa ~90 000 tokens de piso (contexto
       inicial), qualquer que seja a tarefa. Estime: `chamadas` = 2 (plano) + tarefas × 3
-      (implementador + 2 revisores) × 2 (uma reprovação cada) + 1 (final); `orcamento_chamadas`
-      = `chamadas` × 1,5; `orcamento_tokens` = `orcamento_chamadas` × 90 000. Ex.: 2 tarefas →
-      15 chamadas → 23 / 2 070 000. Mostre a conta ao usuário.
+      (implementador + 2 revisores; +1 por tarefa com especialista) × 2 (uma reprovação cada)
+      + 1 (final); `orcamento_chamadas` = `chamadas` × 1,5, arredondado para cima;
+      `orcamento_tokens` = `orcamento_chamadas` × 90 000. Ex.: 2 tarefas → 15 chamadas → 23 / 2 070 000. Mostre a conta ao usuário.
 - [ ] **Quadro**: `off` ou `github` (espelho no GitHub Projects; exige `gh` com escopo
       `project` — `gh auth refresh -s project`, feito pelo usuário).
 - [ ] **Nenhuma pergunta aberta** na sua fila.

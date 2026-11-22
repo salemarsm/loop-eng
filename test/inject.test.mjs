@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -93,4 +94,20 @@ test('inject commita só injecoes.md; arquivo staged fora de docs/loops continua
   assert.equal(cli(repo, 'inject', 'x').status, 0);
   assert.equal(git(wt, 'show', '--name-only', '--format=', 'HEAD'), 'docs/loops/demo/injecoes.md');
   assert.equal(git(wt, 'diff', '--cached', '--name-only'), 'fora.txt');
+});
+
+test('inject e quadro-sync em loop entregue (docs/loops removido) falham com mensagem clara, sem gravar', () => {
+  const { repo, contrato } = criaRepo();
+  const wt = criaLoop(repo, contrato, 'demo');
+  execFileSync('git', ['rm', '-rq', 'docs/loops/demo'], { cwd: wt });
+  execFileSync('git', ['commit', '-qm', 'chore(loop): estado fora do PR'], { cwd: wt });
+  const antes = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: wt, encoding: 'utf8' });
+  for (const args of [['inject', 'demo', 'oi'], ['quadro-sync', 'demo']]) {
+    const r = cli(repo, ...args);
+    assert.notEqual(r.status, 0, args.join(' '));
+    assert.match(r.stderr, /loop entregue: estado arquivado no commit [0-9a-f]{7,}/);
+    assert.doesNotMatch(r.stderr, /ENOENT/);
+  }
+  assert.equal(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: wt, encoding: 'utf8' }), antes);
+  assert.equal(existsSync(path.join(wt, 'docs', 'loops', 'demo')), false);
 });
