@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 2404939
-- chamadas: 27
+- tokens_subagentes: 2485210
+- chamadas: 29
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
 
@@ -19,8 +19,8 @@
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | aceita | sonnet | 1 | aprovado | aprovado | — | d15799f |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | aceita | sonnet | 3 | aprovado | aprovado | — | 9301a49 |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | aceita | opus | 1 | aprovado | aprovado | — | aa8df67 |
-| T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | revisando | sonnet | 1 | — | — | — | — |
-| T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | pendente | opus | 0 | — | — | — | — |
+| T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | aceita | sonnet | 1 | aprovado | aprovado | — | 2a35bc6 |
+| T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | executando | opus | 1 | — | — | — | — |
 
 ## Log
 - 2026-11-23T19:01 contrato v1 aprovado; worktree criada. Tokens do orquestrador não são medidos; o teto de chamadas cobre isso.
@@ -64,3 +64,5 @@
 - 2026-11-23T19:54 T5 r1: despacho do implementador.
 - 2026-11-23T19:56 T5: implementador devolveu (sem pergunta); guarda ok; verificando.
 - 2026-11-23T19:56 T5 r1: verificação verde (placar 8/8, npm test 94/94; fumaça divide sobre casos reais: holdout 2 falhas + 1 controle); implementador 92963 tokens; tokens da conformidade T4 chegaram depois: 96120 (somados); revisando.
+- 2026-11-23T19:58 T5 r1: guarda ok; conformidade aprovado (80271), qualidade aprovado (tokens ainda não informados, somado 0); notas p/ PR: sem teste do mínimo 2 no holdout; controles=1 sem controles; T5 aceita em 2a35bc6.
+- 2026-11-23T19:58 T6 r1: despacho do implementador.
