@@ -17,7 +17,7 @@
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | aceita | sonnet | 2 | aprovado | aprovado | — | 77f02a0 |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | aceita | sonnet | 1 | aprovado | aprovado | — | d15799f |
-| T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | executando | sonnet | 3 | aprovado | reprovado | — | — |
+| T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | verificando | sonnet | 3 | aprovado | reprovado | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
 | T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | pendente | sonnet | 0 | — | — | — | — |
 | T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | pendente | opus | 0 | — | — | — | — |
@@ -54,3 +54,4 @@
 - 2026-11-23T19:35 T3 r2: verificação verde (skill 4/4, npm test 74/74); implementador 73865 tokens; tokens da qualidade T3 r1 chegaram depois: 87281 (somados); revisando.
 - 2026-11-23T19:38 T3 r2: guarda ok; conformidade aprovado (80528); qualidade reprovado (tokens ainda não informados, somado 0): regra 2 (nunca escrever fora da worktree) contradiz o registro de despachos em LOOP_ENG_HOME; nnn ambíguo sobrescreve rodadas do planejador. Achados novos (progresso), sem escalada; orquestrador cita C3 + design para a exceção.
 - 2026-11-23T19:38 T3 r3: despacho do implementador com os achados.
+- 2026-11-23T19:39 T3: implementador devolveu (sem pergunta); guarda ok; verificando.
