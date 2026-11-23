@@ -29,6 +29,7 @@ Você segue este arquivo quando o usuário roda `/loop-eng evoluir plugin|usuari
    - Baseline do alvo `usuario`: o arquivo desse caminho, que é o override quando ele existe.
    - Baseline do alvo `plugin`: sempre `<base da skill>/prompts/planejador.md`.
    - Copie o baseline para `<exec>/candidatos/baseline.md`.
+   - Alvo `plugin`: resolva já aqui o checkout do plugin com `git -C "<base da skill>" rev-parse --show-toplevel`. Se a base não está num checkout git (plugin instalado de cache), pergunte o caminho do checkout junto com a pergunta do passo 2. O passo 7 só usa esse caminho.
 2. Pergunte ao usuário quais repos e quais diretórios de projeto em `~/.claude/projects` usar.
    - Proponha os repos que ele já citou ou que têm `docs/loops` no histórico. Para cada repo, proponha o diretório de projeto de mesmo nome codificado, em que cada caractere fora de `[A-Za-z0-9]` vira `-` (confira listando `~/.claude/projects`).
    - Se o diretório de projeto desta sessão está entre os escolhidos, avise. As transcrições da evolução cairiam nele e poluiriam extrações futuras. Sugira rodar a evolução numa sessão aberta em outro repo, como o do plugin.
@@ -65,7 +66,7 @@ Para cada caso do conjunto (treino ou holdout), em ordem:
    - A worktree original é o caminho absoluto que termina em `worktrees/loop-<slug>` (com `/` ou `\`).
    - Se faltar o contrato ou a worktree, o caso vai para `pulados` (passo 1.4). Faça essa checagem já na preparação.
 2. **Snapshot**:
-   - Crie a worktree com `git -C "<repo>" worktree add --detach "<scratchpad>/rep-<id>" <P>`.
+   - Crie a worktree com `git -C "<repo>" worktree add --detach "<scratchpad>/rep-<id>" <P>`. Se o comando falhar (por exemplo, commit inalcançável), o caso vai para `pulados` com motivo `snapshot falhou`, entra no Log e sai das avaliações de todos os candidatos, para o placar comparar sempre os mesmos casos.
    - Nos três campos, troque toda ocorrência do caminho da worktree original pelo caminho do snapshot. Faça isso com `/` e com `\`, para que nenhum despacho cite `worktrees/loop-<slug>`.
 3. **Planejador**: preencha o candidato com `{{contrato}}`, `{{plano}}` e `{{feedback}}` remontados e `{{worktree}}` = snapshot. Os demais campos ficam vazios. Despache. Guarde a saída e os `subagent_tokens`.
 4. **Checagem e revisão**:
@@ -78,8 +79,8 @@ Para cada caso do conjunto (treino ou holdout), em ordem:
    - Sem tabela, não há revisão: conta como `reprovado`.
 5. **Nota**:
    - `plano-aprovado-1a` (controle): nota 1 se a cobertura fecha e o revisor aprovou; nota 0 se não.
-   - `plano-reprovado`: despache o juiz com `{{defeitos}}` = as linhas `defeitos` do caso, uma por linha, e `{{saida_planejador}}` = a saída inteira do planejador.
-     - A resposta só é válida se a 1ª linha casar `^NOTA: (0\.\d\d|1\.00)$`, a 2ª casar `^PERGUNTOU: (sim|nao)$` e a nota for igual a `[resolvido]` ÷ total de defeitos. Se não for válida, redespache uma vez; se de novo não for, nota 0 e anote no Log.
+   - `plano-reprovado`: despache o juiz com `{{defeitos}}` = as linhas `defeitos` do caso, uma por linha, `{{saida_planejador}}` = a saída inteira do planejador e `{{achados_revisor}}` = as linhas de achado (começam com `- `) do revisor do passo 4 quando ele reprovou; vazio quando aprovou ou quando não houve revisão. Assim um plano que "evita" o defeito conhecido quebrando outra coisa não ganha ponto.
+     - A resposta só é válida se a 1ª linha casar `^NOTA: (0\.\d\d|1\.00)$`, a 2ª casar `^PERGUNTOU: (sim|nao)$`, o número de linhas `- [` for igual a defeitos conhecidos + achados novos que o juiz listou, e a nota for igual a `[resolvido]` ÷ esse número de linhas, arredondada a 2 casas. Se não for válida, redespache uma vez; se de novo não for, nota 0 e anote no Log.
      - O `perguntou` que vale é o do passo 4. Se divergir do juiz, anote no Log.
 6. Remova o snapshot com `git -C "<repo>" worktree remove --force "<scratchpad>/rep-<id>"`. Isso vale sempre, inclusive depois de erro.
 7. Acrescente o resultado ao candidato: `{ caso: <id>, tipo: <tipo do caso, literal>, nota, perguntou, tokens: <subagent_tokens do despacho do planejador> }`. Se o despacho do planejador falhou, nota 0. Grave a saída do planejador, a do revisor e a do juiz em `<exec>/saidas/<candidato>/<id>.md`.
@@ -139,7 +140,7 @@ Rode `evolucao placar` e pegue o `vencedor`. Se for `null`, nenhuma variante fic
 ## 7. Entrega
 
 - **Aceito e alvo `plugin`**:
-  - O checkout do plugin é `git -C "<base da skill>" rev-parse --show-toplevel`. Se a base não está num checkout git (plugin instalado de cache), pergunte o caminho do checkout.
+  - O checkout do plugin é o caminho resolvido no passo 1.1 (sem nova pergunta).
   - Se `git status --porcelain -- skills/loop-eng/prompts/planejador.md` não estiver vazio ali, não sobrescreva. Deixe o vencedor em `<exec>/candidatos/` e diga isso ao usuário.
   - Se estiver vazio, escreva o vencedor em `skills/loop-eng/prompts/planejador.md`. Não faça commit. Abrir PR fica com o usuário.
 - **Aceito e alvo `usuario`**:
