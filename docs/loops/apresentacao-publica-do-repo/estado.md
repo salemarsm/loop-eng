@@ -6,7 +6,7 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 434614
+- tokens_subagentes: 505892
 - chamadas: 8
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
