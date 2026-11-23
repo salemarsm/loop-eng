@@ -19,7 +19,7 @@
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | aceita | sonnet | 1 | aprovado | aprovado | — | d15799f |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | aceita | sonnet | 3 | aprovado | aprovado | — | 9301a49 |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | aceita | opus | 1 | aprovado | aprovado | — | aa8df67 |
-| T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | executando | sonnet | 1 | — | — | — | — |
+| T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | verificando | sonnet | 1 | — | — | — | — |
 | T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | pendente | opus | 0 | — | — | — | — |
 
 ## Log
@@ -62,3 +62,4 @@
 - 2026-11-23T19:52 T4 r1: verificação verde (casos 12/12; C4 real: 7 plano-reprovado, 3 plano-aprovado-1a, 3 lacunas, 0 descartados; npm test 86/86); implementador 144974 tokens; tokens da qualidade T3 r3 chegaram depois: 98325 (somados); revisando.
 - 2026-11-23T19:54 T4 r1: guarda ok; conformidade aprovado (opus, tokens ainda não informados, somado 0), qualidade aprovado (101122); nota p/ PR: slugPeloPlano (revisor sem worktree herda slug do plano embutido) vai além do plano; T4 aceita em aa8df67.
 - 2026-11-23T19:54 T5 r1: despacho do implementador.
+- 2026-11-23T19:56 T5: implementador devolveu (sem pergunta); guarda ok; verificando.
