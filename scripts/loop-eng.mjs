@@ -6,7 +6,8 @@ import { git, defaultBranch, branchExiste, loopWorktrees, resolveLoop } from './
 import { parseEstado, serializeEstado, STATUS } from './lib/estado.mjs';
 import { runGh } from './lib/gh.mjs';
 import { estadosDoRepo, metricasLoop, agrega } from './lib/metricas.mjs';
-import { promptsEfetivos, hashConjunto, overridesVelhos } from './lib/prompts.mjs';
+import { promptsEfetivos, hashConjunto, overridesVelhos, dadosHome } from './lib/prompts.mjs';
+import { extraiCasos, contratoLacunas } from './lib/casos.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
 
@@ -307,8 +308,35 @@ function metricas(args) {
   ].join('\n');
 }
 
+function casos(args) {
+  const valor = (nome) => {
+    const i = args.indexOf(nome);
+    if (i === -1) return undefined;
+    if (args[i + 1] === undefined || args[i + 1].startsWith('--')) throw new Error(`${nome} exige um caminho`);
+    return args[i + 1];
+  };
+  const repoArg = valor('--repo');
+  const projetoArg = valor('--projeto');
+  if (repoArg === undefined || projetoArg === undefined) throw new Error('uso: loop-eng casos --repo <caminho> --projeto <dir> [--saida <arquivo>]');
+  const repo = path.resolve(repoArg);
+  const { casos: lista, descartados } = extraiCasos({ repo, projeto: path.resolve(projetoArg) });
+  const lacunas = contratoLacunas({ repo });
+  const saida = path.resolve(valor('--saida') ?? path.join(dadosHome(), 'evolucao', path.basename(repo), 'casos.json'));
+  fs.mkdirSync(path.dirname(saida), { recursive: true });
+  fs.writeFileSync(saida, `${JSON.stringify({ geradoEm: new Date().toISOString(), repo, casos: lista, lacunas, descartados }, null, 2)}\n`);
+  const conta = (tipo) => lista.filter((c) => c.tipo === tipo).length;
+  return [
+    `plano-reprovado: ${conta('plano-reprovado')}`,
+    `plano-aprovado-1a: ${conta('plano-aprovado-1a')}`,
+    `contrato-lacuna: ${lacunas.length}`,
+    `descartados: ${descartados.length}`,
+    `gravado em ${saida}`,
+  ].join('\n');
+}
+
 const COMANDOS = {
   metricas,
+  casos,
   init,
   'hash-prompts': hashPrompts,
   inject,
