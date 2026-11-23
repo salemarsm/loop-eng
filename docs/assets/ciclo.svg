@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="t d">
+  <title id="t">loop-eng cycle</title>
+  <desc id="d">Refine until zero doubts, approved contract, plan, execute each task with verification and independent review, then open a PR.</desc>
+  <style>
+    :root { --bg: #f6f8fa; --box: #ffffff; --fg: #1f2328; --muted: #59636e; --accent: #0969da; --line: #d1d9e0; --ok: #1a7f37; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0d1117; --box: #161b22; --fg: #f0f6fc; --muted: #9198a1; --accent: #58a6ff; --line: #3d444d; --ok: #3fb950; }
+    }
+    .bg { fill: var(--bg); }
+    .box { fill: var(--box); stroke: var(--line); stroke-width: 1.5; }
+    .hl { fill: var(--box); stroke: var(--accent); stroke-width: 2.5; }
+    .end { fill: var(--box); stroke: var(--ok); stroke-width: 2.5; }
+    .t { fill: var(--fg); font: 600 17px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-anchor: middle; }
+    .s { fill: var(--muted); font: 400 13px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-anchor: middle; }
+    .n { fill: var(--accent); font: 700 13px system-ui, sans-serif; text-anchor: middle; }
+    .arr { stroke: var(--muted); stroke-width: 2; fill: none; }
+    .ah { fill: var(--muted); }
+    .back { stroke: var(--accent); stroke-width: 2; fill: none; stroke-dasharray: 5 4; }
+    .bh { fill: var(--accent); }
+  </style>
+  <rect class="bg" width="900" height="260" rx="12"/>
+  <!-- 1 Refine -->
+  <rect class="box" x="20" y="80" width="150" height="90" rx="10"/>
+  <text class="n" x="95" y="102">1</text>
+  <text class="t" x="95" y="126">Refine</text>
+  <text class="s" x="95" y="148">until zero doubts</text>
+  <!-- 2 Contract -->
+  <rect class="hl" x="200" y="80" width="150" height="90" rx="10"/>
+  <text class="n" x="275" y="102">2</text>
+  <text class="t" x="275" y="126">Contract</text>
+  <text class="s" x="275" y="148">you approve it</text>
+  <!-- 3 Plan -->
+  <rect class="box" x="380" y="80" width="150" height="90" rx="10"/>
+  <text class="n" x="455" y="102">3</text>
+  <text class="t" x="455" y="126">Plan</text>
+  <text class="s" x="455" y="148">tasks and levels</text>
+  <!-- 4 Execute -->
+  <rect class="box" x="560" y="80" width="170" height="90" rx="10"/>
+  <text class="n" x="645" y="102">4</text>
+  <text class="t" x="645" y="126">Execute per task</text>
+  <text class="s" x="645" y="148">verify + review</text>
+  <!-- 5 PR -->
+  <rect class="end" x="760" y="80" width="120" height="90" rx="10"/>
+  <text class="n" x="820" y="102">5</text>
+  <text class="t" x="820" y="126">PR</text>
+  <text class="s" x="820" y="148">delivered</text>
+  <!-- arrows -->
+  <path class="arr" d="M170 125 H192"/><polygon class="ah" points="200,125 191,120 191,130"/>
+  <path class="arr" d="M350 125 H372"/><polygon class="ah" points="380,125 371,120 371,130"/>
+  <path class="arr" d="M530 125 H552"/><polygon class="ah" points="560,125 551,120 551,130"/>
+  <path class="arr" d="M730 125 H752"/><polygon class="ah" points="760,125 751,120 751,130"/>
+  <!-- retry loop on execute -->
+  <path class="back" d="M700 170 V205 H590 V178"/><polygon class="bh" points="590,171 585,181 595,181"/>
+  <text class="s" x="645" y="226">fix and retry until reviewers agree</text>
+  <!-- inject -->
+  <path class="back" d="M275 80 V45 H645 V72"/><polygon class="bh" points="645,80 640,70 650,70"/>
+  <text class="s" x="460" y="36">you can inject changes along the way</text>
+</svg>
