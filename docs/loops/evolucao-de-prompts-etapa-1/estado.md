@@ -6,7 +6,7 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 2918331
+- tokens_subagentes: 3058790
 - chamadas: 33
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
@@ -71,4 +71,4 @@
 - 2026-11-23T20:08 T6 r1: guarda ok; conformidade aprovado (opus, tokens ainda não informados, somado 0), qualidade aprovado (104843); notas p/ C8 no PR; T6 aceita em 1a11fc9.
 - 2026-11-23T20:08 Fase 3: todas aceitas; rodando verificações dos critérios.
 - 2026-11-23T20:09 Fase 3: C1–C7 verdes (prompts 7/7, metricas 11/11, skill 8/8, casos 12/12 + real 7/3, placar 8/8, npm test 98/98); tokens da conformidade T6 chegaram: 104128 (somados); revisor final despachado.
-- 2026-11-23T20:12 revisor final: aprovado (C1–C8; C8 pendente com salemarsm no PR); tokens do revisor final chegam depois do arquivamento (não somados). estado terminal: sucesso — 6/6 tarefas aceitas.
+- 2026-11-23T20:12 revisor final: aprovado (C1–C8; C8 pendente com salemarsm no PR); revisor final 140459 tokens. estado terminal: sucesso — 6/6 tarefas aceitas.
