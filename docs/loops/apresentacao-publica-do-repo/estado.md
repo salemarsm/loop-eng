@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 807182
-- chamadas: 12
+- tokens_subagentes: 877553
+- chamadas: 14
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
 
@@ -17,8 +17,8 @@
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Licença MIT e metadados de licença/repositório | aceita | sonnet | 1 | aprovado | aprovado | — | ac2e4e9 |
 | T2 | Banner e diagrama do ciclo em SVG escritos à mão | aceita | sonnet | 1 | aprovado | aprovado | — | eaebe74 |
-| T3 | Workflow de CI com matriz Ubuntu/Windows | revisando | haiku | 1 | — | — | — | — |
-| T4 | README em inglês e README.pt-BR em paridade | pendente | sonnet | 0 | — | — | — | — |
+| T3 | Workflow de CI com matriz Ubuntu/Windows | aceita | haiku | 1 | aprovado | aprovado | — | a3119fc |
+| T4 | README em inglês e README.pt-BR em paridade | executando | sonnet | 1 | — | — | — | — |
 
 ## Log
 - 2026-11-23T08:00 tokens do orquestrador não são medidos; o teto de chamadas cobre isso
@@ -29,3 +29,4 @@
 - 2026-11-23T08:11 T1 aceita (ac2e4e9); conformidade T1: subagent_tokens pendente na notificação
 - 2026-11-23T08:17 T2 aceita (eaebe74); conformidade T2: subagent_tokens pendente na notificação
 - 2026-11-23T08:18 implementador T3: subagent_tokens pendente na notificação
+- 2026-11-23T08:20 T3 aceita (a3119fc); qualidade T3: subagent_tokens pendente na notificação
