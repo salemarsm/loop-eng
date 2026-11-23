@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+process.env.LOOP_ENG_HOME ??= mkdtempSync(path.join(tmpdir(), 'loop eng home '));
+
 export const CLI = fileURLToPath(new URL('../scripts/loop-eng.mjs', import.meta.url));
 export const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 
@@ -35,3 +37,5 @@ export function criaLoop(repo, contrato, slug) {
   if (r.status !== 0) throw new Error(r.stderr);
   return path.join(repo, '.claude', 'worktrees', `loop-${slug}`);
 }
+
+export const cliEnv = (repo, env, ...args) => spawnSync(process.execPath, [CLI, ...args], { cwd: repo, encoding: 'utf8', env: { ...process.env, ...env } });

@@ -3,6 +3,8 @@
 - fase: planejamento
 - estado_terminal:
 - contrato: v1
+- prompts: <prompts>
+- prompts_origem: <prompts_origem>
 - base: <base>
 - quadro: off
 - project:
