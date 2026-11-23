@@ -6,7 +6,7 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 589504
+- tokens_subagentes: 677273
 - chamadas: 8
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
@@ -36,3 +36,4 @@
 - 2026-11-23T19:10 T1 r2: verificação verde (6/6, 58/58); implementador 72559 tokens; revisando.
 - 2026-11-23T19:12 T1 r2: guarda pós-revisão ok; conformidade aprovado (89756 tokens); qualidade reprovado (tokens ainda não informados, somado 0): testes existentes via helpers init/cli/criaLoop leem o ~/.claude/loop-eng real; correção exige mexer em test/helpers.mjs além de cliEnv (ou package.json), fora das fronteiras.
 - 2026-11-23T19:12 bloqueado: contrato não resolve o conflito entre a Restrição (testes nunca leem o ~/.claude/loop-eng real) e as Fronteiras (helpers.mjs só cliEnv; testes existentes e package.json proibidos). Pergunta ao usuário.
+- 2026-11-23T19:12 tokens da qualidade T1 r2 chegaram depois: 87769 (somados).
