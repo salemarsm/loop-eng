@@ -1,13 +1,13 @@
 # Estado — evolucao-de-prompts-etapa-1
 
 - fase: execucao
-- estado_terminal:
+- estado_terminal: bloqueado
 - contrato: v1
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 499748
-- chamadas: 6
+- tokens_subagentes: 589504
+- chamadas: 8
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
 
@@ -15,7 +15,7 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
-| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | revisando | sonnet | 2 | reprovado | reprovado | — | — |
+| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | bloqueada | sonnet | 2 | aprovado | reprovado | — | — |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | pendente | sonnet | 0 | — | — | — | — |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | pendente | sonnet | 0 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
@@ -34,3 +34,5 @@
 - 2026-11-23T19:09 T1 r2 (sonnet): despacho do implementador com os achados.
 - 2026-11-23T19:10 T1 r2: implementador devolveu (sem pergunta); guarda ok; verificando.
 - 2026-11-23T19:10 T1 r2: verificação verde (6/6, 58/58); implementador 72559 tokens; revisando.
+- 2026-11-23T19:12 T1 r2: guarda pós-revisão ok; conformidade aprovado (89756 tokens); qualidade reprovado (tokens ainda não informados, somado 0): testes existentes via helpers init/cli/criaLoop leem o ~/.claude/loop-eng real; correção exige mexer em test/helpers.mjs além de cliEnv (ou package.json), fora das fronteiras.
+- 2026-11-23T19:12 bloqueado: contrato não resolve o conflito entre a Restrição (testes nunca leem o ~/.claude/loop-eng real) e as Fronteiras (helpers.mjs só cliEnv; testes existentes e package.json proibidos). Pergunta ao usuário.
