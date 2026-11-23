@@ -15,7 +15,7 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
-| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | executando | sonnet | 2 | reprovado | reprovado | — | — |
+| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | verificando | sonnet | 2 | reprovado | reprovado | — | — |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | pendente | sonnet | 0 | — | — | — | — |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | pendente | sonnet | 0 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
@@ -32,3 +32,4 @@
 - 2026-11-23T19:09 T1 r1: guarda pós-revisão ok (diff idêntico); conformidade reprovado (81924 tokens), qualidade reprovado (86479 tokens): teste 'status avisa override velho' roda init sem LOOP_ENG_HOME e lê o ~/.claude/loop-eng real.
 - 2026-11-23T19:09 nota da qualidade: testes existentes (via helpers init/cli/criaLoop) também passam a ler o ~/.claude/loop-eng real; corrigir exige mexer em helpers.mjs além de cliEnv ou em package.json (fora das fronteiras) — contrato não resolve; levado ao usuário sem bloquear (resposta vira injeção).
 - 2026-11-23T19:09 T1 r2 (sonnet): despacho do implementador com os achados.
+- 2026-11-23T19:10 T1 r2: implementador devolveu (sem pergunta); guarda ok; verificando.
