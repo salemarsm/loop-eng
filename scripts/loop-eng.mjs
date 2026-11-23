@@ -8,6 +8,7 @@ import { runGh } from './lib/gh.mjs';
 import { estadosDoRepo, metricasLoop, agrega } from './lib/metricas.mjs';
 import { promptsEfetivos, hashConjunto, overridesVelhos, dadosHome } from './lib/prompts.mjs';
 import { extraiCasos, contratoLacunas } from './lib/casos.mjs';
+import { divide, placarCandidato, ordena, aceita } from './lib/placar.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
 
@@ -334,9 +335,32 @@ function casos(args) {
   ].join('\n');
 }
 
+function evolucao([sub, arquivo, ...args]) {
+  const uso = 'uso: loop-eng evolucao divide <casos.json> [--semente N] | evolucao placar <avaliacoes.json>';
+  if (!['divide', 'placar'].includes(sub) || arquivo === undefined) throw new Error(uso);
+  const json = JSON.parse(fs.readFileSync(path.resolve(arquivo), 'utf8'));
+  if (sub === 'divide') {
+    const i = args.indexOf('--semente');
+    const hoje = new Date().toISOString().slice(0, 10).replaceAll('-', '');
+    const semente = i === -1 ? Number(hoje) : Number(args[i + 1]);
+    if (!Number.isInteger(semente)) throw new Error('--semente exige um número inteiro');
+    return JSON.stringify({ semente, ...divide(json.casos, semente) }, null, 2);
+  }
+  const doConjunto = (lista, conjunto) => lista.filter((a) => a.conjunto === conjunto).map(placarCandidato);
+  const baseline = doConjunto(json.baseline, 'treino')[0];
+  if (baseline === undefined) throw new Error('avaliações sem baseline de treino');
+  const ordenados = ordena(doConjunto(json.candidatos, 'treino'), baseline);
+  const vencedor = ordenados[0] ?? null;
+  const baselineHoldout = doConjunto(json.baseline, 'holdout')[0];
+  const vencedorHoldout = vencedor && doConjunto(json.candidatos, 'holdout').find((p) => p.candidato === vencedor.candidato);
+  const aceito = Boolean(baselineHoldout && vencedorHoldout && aceita(vencedorHoldout, baselineHoldout));
+  return JSON.stringify({ treino: ordenados, vencedor, aceito }, null, 2);
+}
+
 const COMANDOS = {
   metricas,
   casos,
+  evolucao,
   init,
   'hash-prompts': hashPrompts,
   inject,
