@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 580229
-- chamadas: 9
+- tokens_subagentes: 661068
+- chamadas: 11
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
 
@@ -16,8 +16,8 @@
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Licença MIT e metadados de licença/repositório | aceita | sonnet | 1 | aprovado | aprovado | — | ac2e4e9 |
-| T2 | Banner e diagrama do ciclo em SVG escritos à mão | revisando | sonnet | 1 | — | — | — | — |
-| T3 | Workflow de CI com matriz Ubuntu/Windows | pendente | haiku | 0 | — | — | — | — |
+| T2 | Banner e diagrama do ciclo em SVG escritos à mão | aceita | sonnet | 1 | aprovado | aprovado | — | eaebe74 |
+| T3 | Workflow de CI com matriz Ubuntu/Windows | executando | haiku | 1 | — | — | — | — |
 | T4 | README em inglês e README.pt-BR em paridade | pendente | sonnet | 0 | — | — | — | — |
 
 ## Log
@@ -27,3 +27,4 @@
 - 2026-11-23T08:04 revisor de plano r1 reprovado (T1 haiku com 3 arquivos); r2 aprovado; plano com T1–T4
 - 2026-11-23T08:05 revisor de plano r2: subagent_tokens pendente na notificação
 - 2026-11-23T08:11 T1 aceita (ac2e4e9); conformidade T1: subagent_tokens pendente na notificação
+- 2026-11-23T08:17 T2 aceita (eaebe74); conformidade T2: subagent_tokens pendente na notificação
