@@ -15,7 +15,7 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
-| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | executando | sonnet | 2 | aprovado | reprovado | — | — |
+| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | verificando | sonnet | 2 | aprovado | reprovado | — | — |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | pendente | sonnet | 0 | — | — | — | — |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | pendente | sonnet | 0 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
@@ -38,3 +38,4 @@
 - 2026-11-23T19:12 bloqueado: contrato não resolve o conflito entre a Restrição (testes nunca leem o ~/.claude/loop-eng real) e as Fronteiras (helpers.mjs só cliEnv; testes existentes e package.json proibidos). Pergunta ao usuário.
 - 2026-11-23T19:12 tokens da qualidade T1 r2 chegaram depois: 87769 (somados).
 - 2026-11-23T19:20 [muda-contrato forçada] retomado: injeção responde ao bloqueio → contrato v2 (test/helpers.mjs pode isolar LOOP_ENG_HOME no topo). T1 desbloqueada: redespacho do implementador na rodada 2 com a resposta.
+- 2026-11-23T19:21 T1 r2 (v2): implementador devolveu (sem pergunta); guarda ok; verificando.
