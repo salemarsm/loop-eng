@@ -15,7 +15,7 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
-| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | executando | sonnet | 1 | — | — | — | — |
+| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | verificando | sonnet | 1 | — | — | — | — |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | pendente | sonnet | 0 | — | — | — | — |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | pendente | sonnet | 0 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
@@ -27,3 +27,4 @@
 - 2026-11-23T19:03 planejador r1: T1–T6, cobertura conferida; 86410 tokens.
 - 2026-11-23T19:04 [plano-aprovado] revisor de plano r1: aprovado (notas: fixtures só em tmpdir; T6 só acrescenta asserções em skill.test.mjs; helpers.mjs só cliEnv); 71384 tokens.
 - 2026-11-23T19:05 T1 r1 (sonnet): despacho do implementador.
+- 2026-11-23T19:06 T1 r1: implementador devolveu (sem pergunta); guarda ok; verificando.
