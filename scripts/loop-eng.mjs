@@ -5,6 +5,7 @@ import path from 'node:path';
 import { git, defaultBranch, branchExiste, loopWorktrees, resolveLoop } from './lib/git.mjs';
 import { parseEstado, serializeEstado, STATUS } from './lib/estado.mjs';
 import { runGh } from './lib/gh.mjs';
+import { promptsEfetivos, hashConjunto, overridesVelhos } from './lib/prompts.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
 
@@ -62,6 +63,7 @@ function init(args) {
   if (fs.existsSync(worktree)) throw new Error(`o loop já existe: ${worktree}`);
   const contrato = fs.readFileSync(path.resolve(contratoPath), 'utf8');
 
+  const prompts = promptsEfetivos();
   const base = defaultBranch(raiz);
   try {
     git(raiz, ['fetch', 'origin', base]);
@@ -74,7 +76,9 @@ function init(args) {
   const preenche = (t) => t.replaceAll('<slug>', slug)
     .replaceAll('<base>', base)
     .replaceAll('<orcamento_tokens>', String(tokens))
-    .replaceAll('<orcamento_chamadas>', String(chamadas));
+    .replaceAll('<orcamento_chamadas>', String(chamadas))
+    .replaceAll('<prompts>', hashConjunto(prompts))
+    .replaceAll('<prompts_origem>', prompts.some((p) => p.origem === 'override') ? 'override' : 'plugin');
   fs.writeFileSync(path.join(dir, 'contrato.md'), contrato);
   fs.writeFileSync(path.join(dir, 'estado.md'), preenche(modelo('estado.md')));
   fs.writeFileSync(path.join(dir, 'plano.md'), preenche(modelo('plano.md')));
@@ -175,6 +179,7 @@ function status(args) {
     `chamadas: ${cab.chamadas}`,
     `custo por mudança aceita: ${custo}`,
     ...(arquivado ? [`estado arquivado no commit ${arquivado} (removido do PR)`] : []),
+    ...overridesVelhos().map((o) => `aviso: override de ${o.nome} evoluído sobre versão antiga do plugin; rode /loop-eng evoluir usuario`),
   ].join('\n');
 }
 
@@ -274,8 +279,17 @@ function quadroSync(args) {
   return resultado;
 }
 
+function hashPrompts() {
+  const lista = promptsEfetivos();
+  return [
+    `prompts: ${hashConjunto(lista)} (${lista.some((p) => p.origem === 'override') ? 'override' : 'plugin'})`,
+    ...lista.map((p) => `${p.nome} ${p.origem} ${p.hash} ${p.caminho}`),
+  ].join('\n');
+}
+
 const COMANDOS = {
   init,
+  'hash-prompts': hashPrompts,
   inject,
   status,
   'quadro-sync': quadroSync,
