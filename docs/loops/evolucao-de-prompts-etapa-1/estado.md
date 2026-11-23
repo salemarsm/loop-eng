@@ -1,6 +1,6 @@
 # Estado — evolucao-de-prompts-etapa-1
 
-- fase: execucao
+- fase: entrega
 - estado_terminal:
 - contrato: v2
 - base: main
@@ -69,3 +69,4 @@
 - 2026-11-23T20:05 T6: implementador devolveu (sem pergunta); guarda ok; verificando.
 - 2026-11-23T20:06 T6 r1: verificação verde (skill 8/8, npm test 98/98); implementador 139300 tokens; tokens da qualidade T5 chegaram depois: 84850 (somados); revisando.
 - 2026-11-23T20:08 T6 r1: guarda ok; conformidade aprovado (opus, tokens ainda não informados, somado 0), qualidade aprovado (104843); notas p/ C8 no PR; T6 aceita em 1a11fc9.
+- 2026-11-23T20:08 Fase 3: todas aceitas; rodando verificações dos critérios.
