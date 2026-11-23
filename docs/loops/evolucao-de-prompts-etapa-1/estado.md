@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 157794
-- chamadas: 2
+- tokens_subagentes: 258786
+- chamadas: 3
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
 
@@ -15,7 +15,7 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
-| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | verificando | sonnet | 1 | — | — | — | — |
+| T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | revisando | sonnet | 1 | — | — | — | — |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | pendente | sonnet | 0 | — | — | — | — |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | pendente | sonnet | 0 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
@@ -28,3 +28,4 @@
 - 2026-11-23T19:04 [plano-aprovado] revisor de plano r1: aprovado (notas: fixtures só em tmpdir; T6 só acrescenta asserções em skill.test.mjs; helpers.mjs só cliEnv); 71384 tokens.
 - 2026-11-23T19:05 T1 r1 (sonnet): despacho do implementador.
 - 2026-11-23T19:06 T1 r1: implementador devolveu (sem pergunta); guarda ok; verificando.
+- 2026-11-23T19:07 T1 r1: verificação verde (prompts 6/6, npm test 58/58); implementador 100992 tokens; revisando.
