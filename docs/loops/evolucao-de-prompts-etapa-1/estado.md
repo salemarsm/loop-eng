@@ -17,7 +17,7 @@
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | aceita | sonnet | 2 | aprovado | aprovado | — | 77f02a0 |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | aceita | sonnet | 1 | aprovado | aprovado | — | d15799f |
-| T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | executando | sonnet | 1 | — | — | — | — |
+| T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | verificando | sonnet | 1 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
 | T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | pendente | sonnet | 0 | — | — | — | — |
 | T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | pendente | opus | 0 | — | — | — | — |
@@ -46,3 +46,4 @@
 - 2026-11-23T19:28 T2 r1: verificação verde (metricas 11/11, npm test 70/70); implementador 114545 tokens; fumaça metricas no dnsSecurity: plano reprovado postura 4, drivers 2, finalizar 1 (bate com o Log); revisando.
 - 2026-11-23T19:29 T2 r1: guarda ok; conformidade aprovado (86539), qualidade aprovado (tokens ainda não informados, somado 0); T2 aceita em d15799f.
 - 2026-11-23T19:29 T3 r1: despacho do implementador.
+- 2026-11-23T19:32 T3: implementador devolveu (sem pergunta); guarda ok; verificando.
