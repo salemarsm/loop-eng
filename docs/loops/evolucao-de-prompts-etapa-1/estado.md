@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 1788219
-- chamadas: 21
+- tokens_subagentes: 1871435
+- chamadas: 23
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
 
@@ -17,8 +17,8 @@
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | aceita | sonnet | 2 | aprovado | aprovado | — | 77f02a0 |
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | aceita | sonnet | 1 | aprovado | aprovado | — | d15799f |
-| T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | revisando | sonnet | 3 | aprovado | reprovado | — | — |
-| T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
+| T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | aceita | sonnet | 3 | aprovado | aprovado | — | 9301a49 |
+| T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | executando | opus | 1 | — | — | — | — |
 | T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | pendente | sonnet | 0 | — | — | — | — |
 | T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | pendente | opus | 0 | — | — | — | — |
 
@@ -56,3 +56,5 @@
 - 2026-11-23T19:38 T3 r3: despacho do implementador com os achados.
 - 2026-11-23T19:39 T3: implementador devolveu (sem pergunta); guarda ok; verificando.
 - 2026-11-23T19:39 T3 r3: verificação verde (skill 4/4, npm test 74/74); implementador 75247 tokens; tokens da qualidade T3 r2 chegaram depois: 90048 (somados); revisando.
+- 2026-11-23T19:41 T3 r3: guarda ok; conformidade aprovado (83216), qualidade aprovado (tokens ainda não informados, somado 0); nota p/ revisão final: rodar hash-prompts também em Retomar; T3 aceita em 9301a49.
+- 2026-11-23T19:41 T4 r1: despacho do implementador.
