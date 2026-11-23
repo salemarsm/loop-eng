@@ -1,13 +1,13 @@
 # Estado — apresentacao-publica-do-repo
 
-- fase: planejamento
+- fase: execucao
 - estado_terminal:
 - contrato: v1
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 0
-- chamadas: 0
+- tokens_subagentes: 220434
+- chamadas: 4
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
 
@@ -15,5 +15,14 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
+| T1 | Licença MIT e metadados de licença/repositório | executando | sonnet | 1 | — | — | — | — |
+| T2 | Banner e diagrama do ciclo em SVG escritos à mão | pendente | sonnet | 0 | — | — | — | — |
+| T3 | Workflow de CI com matriz Ubuntu/Windows | pendente | haiku | 0 | — | — | — | — |
+| T4 | README em inglês e README.pt-BR em paridade | pendente | sonnet | 0 | — | — | — | — |
 
 ## Log
+- 2026-11-23T08:00 tokens do orquestrador não são medidos; o teto de chamadas cobre isso
+- 2026-11-23T08:03 injeção 08:01 (boas práticas de planejamento) = conflito com não-meta/fronteira skills/; usuário respondeu no chat: vira loop separado no plugin, sem efeito neste contrato
+- 2026-11-23T08:03 planejador: PERGUNTA sobre escape de | na coluna verificacao; respondida pelo orquestrador (roda os comandos literais do contrato; coluna passa a referenciá-los)
+- 2026-11-23T08:04 revisor de plano r1 reprovado (T1 haiku com 3 arquivos); r2 aprovado; plano com T1–T4
+- 2026-11-23T08:05 revisor de plano r2: subagent_tokens pendente na notificação
