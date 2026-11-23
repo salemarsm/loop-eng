@@ -1,13 +1,13 @@
 # Estado — apresentacao-publica-do-repo
 
 - fase: entrega
-- estado_terminal:
+- estado_terminal: sucesso
 - contrato: v1
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 1193865
-- chamadas: 17
+- tokens_subagentes: 1279714
+- chamadas: 18
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
 
@@ -32,3 +32,4 @@
 - 2026-11-23T08:20 T3 aceita (a3119fc); qualidade T3: subagent_tokens pendente na notificação
 - 2026-11-23T08:23 implementador T4: subagent_tokens pendente na notificação
 - 2026-11-23T08:25 T4 aceita (891152c); conformidade T4: subagent_tokens pendente na notificação; fase entrega
+- 2026-11-23T08:27 revisor final r1 aprovado; tokens pendentes já somados (todas as notificações chegaram); estado_terminal sucesso
