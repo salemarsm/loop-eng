@@ -6,7 +6,7 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 735478
+- tokens_subagentes: 807182
 - chamadas: 12
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
@@ -17,7 +17,7 @@
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Licença MIT e metadados de licença/repositório | aceita | sonnet | 1 | aprovado | aprovado | — | ac2e4e9 |
 | T2 | Banner e diagrama do ciclo em SVG escritos à mão | aceita | sonnet | 1 | aprovado | aprovado | — | eaebe74 |
-| T3 | Workflow de CI com matriz Ubuntu/Windows | verificando | haiku | 1 | — | — | — | — |
+| T3 | Workflow de CI com matriz Ubuntu/Windows | revisando | haiku | 1 | — | — | — | — |
 | T4 | README em inglês e README.pt-BR em paridade | pendente | sonnet | 0 | — | — | — | — |
 
 ## Log
