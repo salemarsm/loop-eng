@@ -1,13 +1,13 @@
 # Estado — apresentacao-publica-do-repo
 
-- fase: execucao
+- fase: entrega
 - estado_terminal:
 - contrato: v1
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 1035991
-- chamadas: 15
+- tokens_subagentes: 1115243
+- chamadas: 17
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
 
@@ -18,7 +18,7 @@
 | T1 | Licença MIT e metadados de licença/repositório | aceita | sonnet | 1 | aprovado | aprovado | — | ac2e4e9 |
 | T2 | Banner e diagrama do ciclo em SVG escritos à mão | aceita | sonnet | 1 | aprovado | aprovado | — | eaebe74 |
 | T3 | Workflow de CI com matriz Ubuntu/Windows | aceita | haiku | 1 | aprovado | aprovado | — | a3119fc |
-| T4 | README em inglês e README.pt-BR em paridade | revisando | sonnet | 1 | — | — | — | — |
+| T4 | README em inglês e README.pt-BR em paridade | aceita | sonnet | 1 | aprovado | aprovado | — | 891152c |
 
 ## Log
 - 2026-11-23T08:00 tokens do orquestrador não são medidos; o teto de chamadas cobre isso
@@ -31,3 +31,4 @@
 - 2026-11-23T08:18 implementador T3: subagent_tokens pendente na notificação
 - 2026-11-23T08:20 T3 aceita (a3119fc); qualidade T3: subagent_tokens pendente na notificação
 - 2026-11-23T08:23 implementador T4: subagent_tokens pendente na notificação
+- 2026-11-23T08:25 T4 aceita (891152c); conformidade T4: subagent_tokens pendente na notificação; fase entrega
