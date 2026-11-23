@@ -13,7 +13,7 @@ subagentes, roda a verificação, decide consenso e mantém o estado em disco.
 1. **Único portão humano = aprovação do contrato (Fase 0).** Depois dele nada pede ok ao
    usuário, inclusive contrato v2, v3… vindo de injeção. Só para em estado terminal.
 2. **Nunca**: push na branch principal, merge, deploy, release, escrita fora da worktree
-   do loop (exceção: scratchpad — contrato, mensagem de commit, corpo do PR, worktree descartável do mutante).
+   do loop (exceção: scratchpad — contrato, mensagem de commit, corpo do PR, worktree descartável do mutante, `<LOOP_ENG_HOME>/evolucao/` para o registro de despachos).
 3. **Nunca reescreva histórico**: sem `revert` de tarefa aceita, `reset` de commit,
    `--amend`, `push --force`. Mudança em tarefa aceita = tarefa corretiva nova por cima.
 4. **Você não escreve código de tarefa** nem conserta o do implementador. Ninguém aprova o próprio trabalho.
@@ -37,11 +37,15 @@ subagentes, roda a verificação, decide consenso e mantém o estado em disco.
   (checkout principal, nunca a worktree), caminhos entre aspas. Subcomandos: `slug
   '<texto>'`, `init <slug> <contrato> [--orcamento-tokens N] [--orcamento-chamadas N]`
   (imprime a worktree), `inject [slug] '<texto>'`, `status [slug]` (imprime
-  `worktree: <caminho absoluto>` e `base: <branch>`), `quadro-sync [slug]`.
+  `worktree: <caminho absoluto>` e `base: <branch>`), `quadro-sync [slug]`, `hash-prompts`
+  (uma linha `prompts: <hash> (plugin|override)` e, por arquivo, `<nome> <origem> <hash> <caminho>`).
 - **Texto do usuário** (requisito no `slug`, texto do `inject`) vai como **um único
   argumento entre aspas simples**, cada `'` escapado (`'\''` no Bash, `''` no
   PowerShell) — nunca sem aspas, entre aspas duplas ou interpolado no comando.
-- `WT` = worktree absoluta; estado em `WT/docs/loops/<slug>/`. Prompts em `<base da skill>/prompts/`.
+- `WT` = worktree absoluta; estado em `WT/docs/loops/<slug>/`.
+- **Prompts efetivos**: rode `hash-prompts` uma vez no início da Fase 0. `refinamento.md` e cada
+  prompt de papel são lidos do **caminho que o `hash-prompts` imprime** para o arquivo (override do
+  usuário quando existe, senão `<base da skill>/prompts/`), nunca de caminho montado por você.
 - `<base>` (branch principal) = linha `base:` do CLI `status` (o `init` a grava no `estado.md`).
 
 ## Roteamento de argumentos
@@ -53,6 +57,7 @@ subagentes, roda a verificação, decide consenso e mantém o estado em disco.
 | `inject [slug] <texto>` | rode o CLI `inject` e responda a saída dele, literal; se o loop está em `bloqueado` e esta sessão pode continuá-lo, siga para **Retomar** |
 | `status [slug]` | rode o CLI `status` e responda a saída |
 | `retomar <slug>` | seção **Retomar** |
+| `evoluir plugin\|usuario [--orcamento-tokens N]` | siga `evoluir.md` (na base da skill) |
 
 Mensagem solta do usuário na sessão do loop também é injeção — grave-a com o CLI
 `inject` primeiro, sempre. Loop rodando → próximo checkpoint; parado em `bloqueado` (a
@@ -69,6 +74,11 @@ mensagem responde ao bloqueio) → **Retomar**; outro terminal → vale no próx
   `<agente>: <veredito>`; `commit` = hash curto ou `—`.
 - `## Log`: uma linha datada por evento (escalada, injeção, bloqueio, tarefa removida…).
   Inclua uma vez: "tokens do orquestrador não são medidos; o teto de chamadas cobre isso".
+  **Marcas fixas** (literais, no início da linha de Log do evento, lidas por `metricas`):
+  `[plano-reprovado]` e `[plano-aprovado]` (Fase 1 passos 4/5 e corretivo passos 3/4, a cada
+  revisão de plano), `[escalada <id>]` (Freios), `[muda-contrato forçada]` (a injeção responde a
+  `bloqueado`/`estagnado` ou a achado de revisor sobre o contrato) e `[muda-contrato espontânea]`
+  (qualquer outra), ambas no Checkpoint passo 2.
 
 ## Fase 0 — Refinamento
 
@@ -84,13 +94,19 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 ## Despacho de subagentes
 
 - Ferramenta Agent, **sempre com `model` explícito**. Ordem `haiku < sonnet < opus`.
-- Prompt = arquivo de `prompts/` com cada `{{campo}}` substituído (vazio se não houver):
+- Prompt = arquivo do papel (caminho do `hash-prompts`) com cada `{{campo}}` substituído (vazio se não houver):
   `{{contrato}}` = `contrato.md` vigente inteiro; `{{tarefa}}` = linha do plano + texto
   dos critérios que ela cobre; `{{worktree}}` = `WT`; `{{nonce}}` = novo a cada despacho, `node -e
   "console.log(require('crypto').randomBytes(8).toString('hex'))"` (aparece no conteúdo → outro). Ordem: troque `{{nonce}}` no modelo **primeiro**, depois os demais campos numa só passada, sem substituir de novo dentro do conteúdo preenchido.
 - **Checkout principal intocado**: antes de cada despacho guarde `git status --porcelain`
   da raiz do projeto; no retorno, compare. Mudou → Log, e a rodada (de tarefa, de plano
   ou final) conta como reprovada. Não reverta nada ali (pode ser do usuário): só reporte.
+- **Registro do despacho**: depois de preencher o prompt, grave com a ferramenta de escrita
+  `{ papel, slug, rodada, P, campos: { contrato, tarefa, plano, feedback, saida_verificacao,
+  worktree } }` (campos vazios incluídos) em `<LOOP_ENG_HOME>/evolucao/<nome da pasta da raiz do
+  projeto>/despachos/<slug>/<nnn>-<papel>.json` (`LOOP_ENG_HOME` padrão `~/.claude/loop-eng`;
+  `nnn` = 3 dígitos, único por despacho: `chamadas` + nº de despachos desde o último checkpoint
+  + 1, incrementado a cada despacho, para que rodadas sem checkpoint não sobrescrevam). Falha ao gravar não para o loop (Log).
 
 | Papel | Prompt | subagent_type | model |
 |---|---|---|---|
@@ -115,9 +131,9 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
 1. Planejador com contrato, plano e feedback vazios. `PERGUNTA:` não vazia → **bloqueado**.
 2. Confira você: todo `Cn` em `COBERTURA:` e na tabela (corretivo: só os tocados). Faltou → achado.
 3. Revisor de plano com contrato + tabela do plano; `{{feedback}}` vazio.
-4. Reprovado (ou cobertura falha) → planejador de novo com os achados em `{{feedback}}`.
-   Até **2 rodadas de revisão de plano**; a 2ª reprovação → **estagnado**.
-5. Aprovado → tabela em `plano.md`; uma linha no quadro por tarefa (`pendente`, nível
+4. Reprovado (ou cobertura falha) → Log `[plano-reprovado] …`; planejador de novo com os achados em
+   `{{feedback}}`. Até **2 rodadas de revisão de plano**; a 2ª reprovação → **estagnado**.
+5. Aprovado → Log `[plano-aprovado] …`; tabela em `plano.md`; uma linha no quadro por tarefa (`pendente`, nível
    do plano, rodada 0, vereditos `—`, commit `—`); `fase: execucao`; checkpoint.
 
 ### Planejamento corretivo (achados do revisor final ou injeção `muda-contrato`)
@@ -126,9 +142,9 @@ Siga `refinamento.md` até o checklist fechar e o usuário aprovar explicitament
    id: T<n>; motivo: <achados/injeção + contrato novo>"; devolve **só** as tarefas novas/afetadas.
 2. Revisor de plano com `{{plano}}` = `plano.md` + as linhas novas (não gravadas) e `{{feedback}}`
    = "modo corretivo: tarefas novas <ids>; motivo: …" (cobertura só nos critérios tocados).
-3. Reprovado → planejador de novo com o mesmo contexto corretivo **e** os achados; devolve só
-   as novas (mesmos ids). Até 2 rodadas; a 2ª reprovação → **estagnado**.
-4. Aprovado → linhas novas **ao fim** do `plano.md` (nada existente muda, salvo a marca
+3. Reprovado → Log `[plano-reprovado] …`; planejador de novo com o mesmo contexto corretivo **e** os
+   achados; devolve só as novas (mesmos ids). Até 2 rodadas; a 2ª reprovação → **estagnado**.
+4. Aprovado → Log `[plano-aprovado] …`; linhas novas **ao fim** do `plano.md` (nada existente muda, salvo a marca
    "removida em vN"), no quadro como `pendente`; `fase: execucao`; persista; Fase 2.
 
 ## Fase 2 — Execução (`fase: execucao`), tarefa por tarefa na ordem do quadro
@@ -180,7 +196,7 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
   os mesmos achados de revisor (mesmo arquivo/problema).
 - Sem progresso e a tarefa **ainda não subiu** → sobe **um** nível (haiku→sonnet,
   sonnet→opus), **zera a rodada** (próxima é a rodada 1 no nível novo), atualiza
-  `nivel` no quadro e anota no Log. Revisores passam a `max(padrão, nível novo)`.
+  `nivel` no quadro e anota no Log com `[escalada <id>] …`. Revisores passam a `max(padrão, nível novo)`.
 - Escalada **no máximo uma vez por tarefa**. Já subiu, ou já é `opus` → não sobe de novo.
 - Teto: **3 rodadas** no nível atual. Rodada 3 não aceita → tarefa `estagnada`, loop
   **estagnado** — salvo se essa mesma rodada disparou a escalada (sem progresso e ainda
@@ -217,7 +233,9 @@ persistida **antes** do passo seguinte (despacho, verificação, revisão).
      contrato nomeia (ex.: "não precisa do filtro por data" com C3 = filtro por data).
      A injeção é mais nova e **vence por padrão**; não é conflito. Grave `contrato.md`
      v(N+1): critério removido fica riscado e anotado (`~~C3 …~~ removido em v2:
-     injeção <ts>`), nunca apagado; `contrato: vN+1` no estado. **Pendentes** afetadas
+     injeção <ts>`), nunca apagado; `contrato: vN+1` no estado. Grave no Log
+     `[muda-contrato forçada] …` se a injeção responde a `bloqueado`/`estagnado` ou a achado
+     de revisor sobre o contrato, senão `[muda-contrato espontânea] …`. **Pendentes** afetadas
      saem do quadro (no `plano.md` ficam, com "removida em vN" no título, para o id não
      ser reusado; Log); **aceitas** afetadas ganham tarefa corretiva por cima, nunca
      revert. Ambas vão ao **Planejamento corretivo**. Sem pedir aprovação ao usuário.
