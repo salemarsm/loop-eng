@@ -16,7 +16,7 @@
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
 | T1 | Prompts efetivos, hash de conjunto, override, hash-prompts, campos prompts/prompts_origem no init e aviso no status | aceita | sonnet | 2 | aprovado | aprovado | — | 77f02a0 |
-| T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | executando | sonnet | 1 | — | — | — | — |
+| T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | verificando | sonnet | 1 | — | — | — | — |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | pendente | sonnet | 0 | — | — | — | — |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | pendente | opus | 0 | — | — | — | — |
 | T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | pendente | sonnet | 0 | — | — | — | — |
@@ -42,3 +42,4 @@
 - 2026-11-23T19:22 T1 r2 (v2): verificação verde (7/7, 59/59); implementador 77124 tokens; revisando.
 - 2026-11-23T19:23 T1 r2 (v2): guarda ok; conformidade aprovado (81077), qualidade aprovado (84309); T1 aceita em 77f02a0.
 - 2026-11-23T19:23 T2 r1: despacho do implementador.
+- 2026-11-23T19:27 T2: implementador devolveu (sem pergunta); guarda ok; verificando.
