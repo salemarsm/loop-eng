@@ -5,6 +5,7 @@ import path from 'node:path';
 import { git, defaultBranch, branchExiste, loopWorktrees, resolveLoop } from './lib/git.mjs';
 import { parseEstado, serializeEstado, STATUS } from './lib/estado.mjs';
 import { runGh } from './lib/gh.mjs';
+import { estadosDoRepo, metricasLoop, agrega } from './lib/metricas.mjs';
 import { promptsEfetivos, hashConjunto, overridesVelhos } from './lib/prompts.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
@@ -287,7 +288,27 @@ function hashPrompts() {
   ].join('\n');
 }
 
+function metricas(args) {
+  const i = args.indexOf('--repo');
+  if (i !== -1 && (args[i + 1] === undefined || args[i + 1].startsWith('--'))) throw new Error('--repo exige um caminho');
+  const repo = path.resolve(i === -1 ? process.cwd() : args[i + 1]);
+  const loops = estadosDoRepo(repo).map(metricasLoop);
+  if (loops.length === 0) return 'nenhum loop encontrado';
+  const agregado = agrega(loops);
+  if (args.includes('--json')) return JSON.stringify({ loops, agregado }, null, 2);
+  const n = (v, sufixo = '') => (v === null ? '—' : `${v}${sufixo}`);
+  return [
+    'loops:',
+    ...loops.map((m) => (m.ilegivel
+      ? `  ${m.slug}: ilegível: ${m.ilegivel}`
+      : `  ${m.slug}: ${m.terminal}, prompts ${m.prompts}, aceitas ${m.tarefasAceitas}, 1ª rodada ${n(m.primeiraRodadaPct, '%')}, plano reprovado ${m.planoReprovado}, tokens/aceita ${n(m.tokensPorAceita)}, orçamento tokens ${n(m.orcamentoTokensPct, '%')}, chamadas ${n(m.orcamentoChamadasPct, '%')}, contrato +${m.contratoMudancas} (forçadas ${n(m.contratoForcadas)})${m.custoAproximado ? ', custo aproximado' : ''}${m.inferido ? ', marcas inferidas' : ''}`)),
+    'agregado por prompts (loops encerrados):',
+    ...agregado.map((a) => `  ${a.prompts}: ${a.loops} loops, aceitas ${a.tarefasAceitas}, 1ª rodada ${n(a.primeiraRodadaPct, '%')}, plano reprovado/loop ${a.planoReprovadoPorLoop}, tokens/aceita ${n(a.tokensPorAceita)}`),
+  ].join('\n');
+}
+
 const COMANDOS = {
+  metricas,
   init,
   'hash-prompts': hashPrompts,
   inject,
