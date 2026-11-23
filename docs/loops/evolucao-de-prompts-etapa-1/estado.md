@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 2215856
-- chamadas: 26
+- tokens_subagentes: 2404939
+- chamadas: 27
 - orcamento_tokens: 5310000
 - orcamento_chamadas: 59
 
@@ -19,7 +19,7 @@
 | T2 | Subcomando metricas com estadosDoRepo, contaMarcas, metricasLoop e agrega | aceita | sonnet | 1 | aprovado | aprovado | — | d15799f |
 | T3 | SKILL.md grava as cinco marcas fixas, lê prompts pelo caminho do hash-prompts, registra despachos e roteia evoluir | aceita | sonnet | 3 | aprovado | aprovado | — | 9301a49 |
 | T4 | Subcomando casos com lerTranscricao, extraiCasos e contratoLacunas sobre transcrições sintéticas e dados reais | aceita | opus | 1 | aprovado | aprovado | — | aa8df67 |
-| T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | verificando | sonnet | 1 | — | — | — | — |
+| T5 | Divisão treino/holdout e placar determinísticos com subcomandos evolucao divide e evolucao placar | revisando | sonnet | 1 | — | — | — | — |
 | T6 | Skill evoluir.md com o procedimento e os prompts juiz-evolucao.md e refletor-evolucao.md | pendente | opus | 0 | — | — | — | — |
 
 ## Log
@@ -63,3 +63,4 @@
 - 2026-11-23T19:54 T4 r1: guarda ok; conformidade aprovado (opus, tokens ainda não informados, somado 0), qualidade aprovado (101122); nota p/ PR: slugPeloPlano (revisor sem worktree herda slug do plano embutido) vai além do plano; T4 aceita em aa8df67.
 - 2026-11-23T19:54 T5 r1: despacho do implementador.
 - 2026-11-23T19:56 T5: implementador devolveu (sem pergunta); guarda ok; verificando.
+- 2026-11-23T19:56 T5 r1: verificação verde (placar 8/8, npm test 94/94; fumaça divide sobre casos reais: holdout 2 falhas + 1 controle); implementador 92963 tokens; tokens da conformidade T4 chegaram depois: 96120 (somados); revisando.
