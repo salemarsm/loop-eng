@@ -6,8 +6,8 @@
 - base: main
 - quadro: off
 - project:
-- tokens_subagentes: 291671
-- chamadas: 5
+- tokens_subagentes: 362976
+- chamadas: 6
 - orcamento_tokens: 3690000
 - orcamento_chamadas: 41
 
@@ -15,7 +15,7 @@
 
 | id | titulo | status | nivel | rodada | conformidade | qualidade | especialista | commit |
 |----|--------|--------|-------|--------|--------------|-----------|--------------|--------|
-| T1 | Licença MIT e metadados de licença/repositório | verificando | sonnet | 1 | — | — | — | — |
+| T1 | Licença MIT e metadados de licença/repositório | revisando | sonnet | 1 | — | — | — | — |
 | T2 | Banner e diagrama do ciclo em SVG escritos à mão | pendente | sonnet | 0 | — | — | — | — |
 | T3 | Workflow de CI com matriz Ubuntu/Windows | pendente | haiku | 0 | — | — | — | — |
 | T4 | README em inglês e README.pt-BR em paridade | pendente | sonnet | 0 | — | — | — | — |
