@@ -1,4 +1,4 @@
-# Contrato — evolucao-de-prompts-etapa-1
+# Contrato — evolucao-de-prompts-etapa-1 (v2)
 
 ## Requisito
 
@@ -77,7 +77,8 @@ o `planejador.md` com base em falhas reais, no plugin e em override do usuário.
   `skills/loop-eng/prompts/juiz-evolucao.md`, `skills/loop-eng/prompts/refletor-evolucao.md`,
   `test/prompts.test.mjs`, `test/metricas.test.mjs`, `test/skill.test.mjs`, `test/casos.test.mjs`,
   `test/placar.test.mjs`.
-- `test/helpers.mjs`: só acrescentar `cliEnv`, sem mudar o que existe.
+- ~~`test/helpers.mjs`: só acrescentar `cliEnv`, sem mudar o que existe.~~ trocado em v2: injeção 2026-11-23T19:20
+- `test/helpers.mjs`: acrescentar `cliEnv` e, no topo, `process.env.LOOP_ENG_HOME ??= <tmpdir criado com mkdtempSync>`, para todos os testes (inclusive os existentes, via helpers `init`/`cli`/`criaLoop`) não lerem o `~/.claude/loop-eng` real; o resto do arquivo não muda (v2).
 - Proibido tocar: demais arquivos de `skills/loop-eng/prompts/`, `skills/loop-eng/refinamento.md`,
   `scripts/lib/estado.mjs`, `scripts/lib/git.mjs`, `scripts/lib/gh.mjs`, testes existentes,
   `test/pressao/`, `test/fixtures/fake-gh.mjs`, `README*`, `LICENSE`, `docs/`, `.claude-plugin/`,
