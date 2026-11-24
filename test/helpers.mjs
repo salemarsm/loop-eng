@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,8 @@ export const CLI = fileURLToPath(new URL('../scripts/loop-eng.mjs', import.meta.
 export const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 
 export function criaRepo() {
-  const base = mkdtempSync(path.join(tmpdir(), 'loop eng '));
+  // realpath: no Windows o tmpdir pode vir em 8.3 (RUNNER~1) e o git devolve o caminho longo.
+  const base = realpathSync.native(mkdtempSync(path.join(tmpdir(), 'loop eng ')));
   const remoto = path.join(base, 'remoto.git');
   const repo = path.join(base, 'meu projeto');
   mkdirSync(repo);
