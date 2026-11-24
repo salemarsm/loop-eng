@@ -5,6 +5,10 @@ import path from 'node:path';
 import { git, defaultBranch, branchExiste, loopWorktrees, resolveLoop } from './lib/git.mjs';
 import { parseEstado, serializeEstado, STATUS } from './lib/estado.mjs';
 import { runGh } from './lib/gh.mjs';
+import { estadosDoRepo, metricasLoop, agrega } from './lib/metricas.mjs';
+import { promptsEfetivos, hashConjunto, overridesVelhos, dadosHome } from './lib/prompts.mjs';
+import { extraiCasos, contratoLacunas } from './lib/casos.mjs';
+import { divide, placarCandidato, ordena, aceita } from './lib/placar.mjs';
 
 const TAMANHO_MAXIMO_SLUG = 40;
 
@@ -62,6 +66,7 @@ function init(args) {
   if (fs.existsSync(worktree)) throw new Error(`o loop já existe: ${worktree}`);
   const contrato = fs.readFileSync(path.resolve(contratoPath), 'utf8');
 
+  const prompts = promptsEfetivos();
   const base = defaultBranch(raiz);
   try {
     git(raiz, ['fetch', 'origin', base]);
@@ -74,7 +79,9 @@ function init(args) {
   const preenche = (t) => t.replaceAll('<slug>', slug)
     .replaceAll('<base>', base)
     .replaceAll('<orcamento_tokens>', String(tokens))
-    .replaceAll('<orcamento_chamadas>', String(chamadas));
+    .replaceAll('<orcamento_chamadas>', String(chamadas))
+    .replaceAll('<prompts>', hashConjunto(prompts))
+    .replaceAll('<prompts_origem>', prompts.some((p) => p.origem === 'override') ? 'override' : 'plugin');
   fs.writeFileSync(path.join(dir, 'contrato.md'), contrato);
   fs.writeFileSync(path.join(dir, 'estado.md'), preenche(modelo('estado.md')));
   fs.writeFileSync(path.join(dir, 'plano.md'), preenche(modelo('plano.md')));
@@ -175,6 +182,7 @@ function status(args) {
     `chamadas: ${cab.chamadas}`,
     `custo por mudança aceita: ${custo}`,
     ...(arquivado ? [`estado arquivado no commit ${arquivado} (removido do PR)`] : []),
+    ...overridesVelhos().map((o) => `aviso: override de ${o.nome} evoluído sobre versão antiga do plugin; rode /loop-eng evoluir usuario`),
   ].join('\n');
 }
 
@@ -274,8 +282,87 @@ function quadroSync(args) {
   return resultado;
 }
 
+function hashPrompts() {
+  const lista = promptsEfetivos();
+  return [
+    `prompts: ${hashConjunto(lista)} (${lista.some((p) => p.origem === 'override') ? 'override' : 'plugin'})`,
+    ...lista.map((p) => `${p.nome} ${p.origem} ${p.hash} ${p.caminho}`),
+  ].join('\n');
+}
+
+function metricas(args) {
+  const i = args.indexOf('--repo');
+  if (i !== -1 && (args[i + 1] === undefined || args[i + 1].startsWith('--'))) throw new Error('--repo exige um caminho');
+  const repo = path.resolve(i === -1 ? process.cwd() : args[i + 1]);
+  const loops = estadosDoRepo(repo).map(metricasLoop);
+  if (loops.length === 0) return 'nenhum loop encontrado';
+  const agregado = agrega(loops);
+  if (args.includes('--json')) return JSON.stringify({ loops, agregado }, null, 2);
+  const n = (v, sufixo = '') => (v === null ? '—' : `${v}${sufixo}`);
+  return [
+    'loops:',
+    ...loops.map((m) => (m.ilegivel
+      ? `  ${m.slug}: ilegível: ${m.ilegivel}`
+      : `  ${m.slug}: ${m.terminal}, prompts ${m.prompts}, aceitas ${m.tarefasAceitas}, 1ª rodada ${n(m.primeiraRodadaPct, '%')}, plano reprovado ${m.planoReprovado}, tokens/aceita ${n(m.tokensPorAceita)}, orçamento tokens ${n(m.orcamentoTokensPct, '%')}, chamadas ${n(m.orcamentoChamadasPct, '%')}, contrato +${m.contratoMudancas} (forçadas ${n(m.contratoForcadas)})${m.custoAproximado ? ', custo aproximado' : ''}${m.inferido ? ', marcas inferidas' : ''}`)),
+    'agregado por prompts (loops encerrados):',
+    ...agregado.map((a) => `  ${a.prompts}: ${a.loops} loops, aceitas ${a.tarefasAceitas}, 1ª rodada ${n(a.primeiraRodadaPct, '%')}, plano reprovado/loop ${a.planoReprovadoPorLoop}, tokens/aceita ${n(a.tokensPorAceita)}`),
+  ].join('\n');
+}
+
+function casos(args) {
+  const valor = (nome) => {
+    const i = args.indexOf(nome);
+    if (i === -1) return undefined;
+    if (args[i + 1] === undefined || args[i + 1].startsWith('--')) throw new Error(`${nome} exige um caminho`);
+    return args[i + 1];
+  };
+  const repoArg = valor('--repo');
+  const projetoArg = valor('--projeto');
+  if (repoArg === undefined || projetoArg === undefined) throw new Error('uso: loop-eng casos --repo <caminho> --projeto <dir> [--saida <arquivo>]');
+  const repo = path.resolve(repoArg);
+  const { casos: lista, descartados } = extraiCasos({ repo, projeto: path.resolve(projetoArg) });
+  const lacunas = contratoLacunas({ repo });
+  const saida = path.resolve(valor('--saida') ?? path.join(dadosHome(), 'evolucao', path.basename(repo), 'casos.json'));
+  fs.mkdirSync(path.dirname(saida), { recursive: true });
+  fs.writeFileSync(saida, `${JSON.stringify({ geradoEm: new Date().toISOString(), repo, casos: lista, lacunas, descartados }, null, 2)}\n`);
+  const conta = (tipo) => lista.filter((c) => c.tipo === tipo).length;
+  return [
+    `plano-reprovado: ${conta('plano-reprovado')}`,
+    `plano-aprovado-1a: ${conta('plano-aprovado-1a')}`,
+    `contrato-lacuna: ${lacunas.length}`,
+    `descartados: ${descartados.length}`,
+    `gravado em ${saida}`,
+  ].join('\n');
+}
+
+function evolucao([sub, arquivo, ...args]) {
+  const uso = 'uso: loop-eng evolucao divide <casos.json> [--semente N] | evolucao placar <avaliacoes.json>';
+  if (!['divide', 'placar'].includes(sub) || arquivo === undefined) throw new Error(uso);
+  const json = JSON.parse(fs.readFileSync(path.resolve(arquivo), 'utf8'));
+  if (sub === 'divide') {
+    const i = args.indexOf('--semente');
+    const hoje = new Date().toISOString().slice(0, 10).replaceAll('-', '');
+    const semente = i === -1 ? Number(hoje) : Number(args[i + 1]);
+    if (!Number.isInteger(semente)) throw new Error('--semente exige um número inteiro');
+    return JSON.stringify({ semente, ...divide(json.casos, semente) }, null, 2);
+  }
+  const doConjunto = (lista, conjunto) => lista.filter((a) => a.conjunto === conjunto).map(placarCandidato);
+  const baseline = doConjunto(json.baseline, 'treino')[0];
+  if (baseline === undefined) throw new Error('avaliações sem baseline de treino');
+  const ordenados = ordena(doConjunto(json.candidatos, 'treino'), baseline);
+  const vencedor = ordenados[0] ?? null;
+  const baselineHoldout = doConjunto(json.baseline, 'holdout')[0];
+  const vencedorHoldout = vencedor && doConjunto(json.candidatos, 'holdout').find((p) => p.candidato === vencedor.candidato);
+  const aceito = Boolean(baselineHoldout && vencedorHoldout && aceita(vencedorHoldout, baselineHoldout));
+  return JSON.stringify({ treino: ordenados, vencedor, aceito }, null, 2);
+}
+
 const COMANDOS = {
+  metricas,
+  casos,
+  evolucao,
   init,
+  'hash-prompts': hashPrompts,
   inject,
   status,
   'quadro-sync': quadroSync,
